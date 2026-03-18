@@ -1,0 +1,22 @@
+{
+  "name": "familiekalender-whatsapp",
+  "version": "1.0.0",
+  "description": "Familiekalender WhatsApp Integration",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "node src/index.js",
+    "dev": "nodemon src/index.js",
+    "test": "jest",
+    "test:watch": "jest --watch"
+  },
+  "dependencies": {
+    "@whiskeysockets/baileys": "^6.6.0",
+    "node-cron": "^3.0.3",
+    "pino": "^8.17.0",
+    "qrcode-terminal": "^0.12.0"
+  },
+  "devDependencies": {
+    "jest": "^29.7.0",
+    "nodemon": "^3.0.2"
+  }
+}

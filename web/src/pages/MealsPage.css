@@ -1,0 +1,137 @@
+.meals-page {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.meals-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem;
+  border-bottom: 1px solid var(--border-color);
+  background: var(--bg-secondary);
+}
+
+.today-meal {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1rem 1.25rem;
+  background: var(--accent-light);
+  border-bottom: 1px solid var(--border-color);
+}
+
+.today-meal-label {
+  font-size: 0.9375rem;
+  color: var(--text-secondary);
+}
+
+.today-meal-title {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--accent);
+}
+
+.meals-content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 1rem;
+}
+
+.meals-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.meals-grid-header {
+  display: grid;
+  grid-template-columns: 80px repeat(3, 1fr);
+  gap: 0.5rem;
+  padding: 0.5rem 0;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.meals-type-col {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  font-weight: 600;
+  color: var(--text-muted);
+  letter-spacing: 0.5px;
+  text-align: center;
+}
+
+.meals-row {
+  display: grid;
+  grid-template-columns: 80px repeat(3, 1fr);
+  gap: 0.5rem;
+  padding: 0.5rem 0;
+  border-bottom: 1px solid var(--border-color);
+  align-items: center;
+}
+
+.meals-row-today {
+  background: var(--accent-light);
+  border-radius: var(--radius-sm);
+  margin: 0 -0.5rem;
+  padding: 0.5rem;
+}
+
+.meals-day-col {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.meals-day-name {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
+.meals-day-number {
+  font-weight: 600;
+  font-size: 0.875rem;
+}
+
+.meals-cell {
+  padding: 0.5rem;
+  border-radius: var(--radius-sm);
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all var(--transition);
+  border: 1px dashed var(--border-color);
+}
+
+.meals-cell:hover {
+  background: var(--bg-hover);
+}
+
+.meals-cell-filled {
+  background: var(--bg-card);
+  border-style: solid;
+}
+
+.meal-title {
+  font-size: 0.8125rem;
+  font-weight: 500;
+  text-align: center;
+}
+
+.meal-add {
+  font-size: 1.25rem;
+  color: var(--text-muted);
+}
+
+@media (max-width: 480px) {
+  .meals-grid-header, .meals-row {
+    grid-template-columns: 60px repeat(3, 1fr);
+  }
+  .meals-type-col, .meal-title {
+    font-size: 0.6875rem;
+  }
+}

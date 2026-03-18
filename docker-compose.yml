@@ -1,0 +1,35 @@
+version: '3.8'
+
+services:
+  familiekalender-api:
+    build: ./api
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./data:/app/data
+    environment:
+      - DATABASE_URL=sqlite:///app/data/kalender.db
+      - JWT_SECRET=change-me-in-production
+      - NODE_ENV=production
+      - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID:-}
+      - GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET:-}
+    restart: unless-stopped
+
+  familiekalender-web:
+    build: ./web
+    ports:
+      - "8080:80"
+    depends_on:
+      - familiekalender-api
+    restart: unless-stopped
+
+  familiekalender-whatsapp:
+    build: ./whatsapp
+    depends_on:
+      - familiekalender-api
+    volumes:
+      - ./data/whatsapp-session:/app/session
+    environment:
+      - API_URL=http://familiekalender-api:3000
+      - API_TOKEN=${API_TOKEN:-}
+    restart: unless-stopped

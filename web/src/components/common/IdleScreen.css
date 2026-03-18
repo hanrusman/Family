@@ -1,0 +1,52 @@
+.idle-screen {
+  position: fixed;
+  inset: 0;
+  background: #000;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 9999;
+  animation: dimIn 1s ease forwards;
+}
+
+.idle-content {
+  text-align: center;
+}
+
+.idle-time {
+  font-size: 8rem;
+  font-weight: 200;
+  color: rgba(255, 255, 255, 0.9);
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+
+.idle-date {
+  font-size: 1.5rem;
+  color: rgba(255, 255, 255, 0.5);
+  margin-top: 0.5rem;
+  text-transform: capitalize;
+}
+
+.idle-hint {
+  position: absolute;
+  bottom: 2rem;
+  color: rgba(255, 255, 255, 0.2);
+  font-size: 0.875rem;
+}
+
+@keyframes dimIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@media (max-width: 768px) {
+  .idle-time {
+    font-size: 5rem;
+  }
+  .idle-date {
+    font-size: 1.25rem;
+  }
+}

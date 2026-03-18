@@ -1,0 +1,17 @@
+{
+  "name": "Familiekalender",
+  "short_name": "Kalender",
+  "description": "Familiekalender - centraal commandocentrum voor het gezin",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0f172a",
+  "theme_color": "#0f172a",
+  "orientation": "any",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    }
+  ]
+}
