@@ -15,8 +15,7 @@ export default function ChoresPage() {
 
   const fetchChores = useCallback(async () => {
     try {
-      const fetcher = isTabletMode ? tabletApi : api;
-      const data = await fetcher.get(`/chores?date=${toDateString(currentDate)}`);
+      const data = await (isTabletMode ? tabletApi : api).get(`/chores?date=${toDateString(currentDate)}`);
       setChores(data);
     } catch (err) {
       console.warn('Kan klusjes niet laden:', err.message);
@@ -38,9 +37,7 @@ export default function ChoresPage() {
 
   const toggleChore = async (id) => {
     try {
-      const fetcher = isTabletMode ? tabletApi : api;
-      const path = isTabletMode ? `/chores/${id}/toggle` : `/chores/${id}/toggle`;
-      await fetcher.patch(path);
+      await (isTabletMode ? tabletApi : api).patch(`/chores/${id}/toggle`);
       fetchChores();
     } catch (err) {
       console.error(err);

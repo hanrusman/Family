@@ -11,7 +11,6 @@ import WeekView from '../components/calendar/WeekView';
 import MonthView from '../components/calendar/MonthView';
 import AgendaView from '../components/calendar/AgendaView';
 import EventModal from '../components/calendar/EventModal';
-import ErrorMessage from '../components/common/ErrorMessage';
 import './CalendarPage.css';
 
 const VIEWS = [
@@ -53,10 +52,7 @@ export default function CalendarPage() {
   const fetchEvents = useCallback(async () => {
     try {
       const fetcher = isTabletMode ? tabletApi : api;
-      const path = isTabletMode
-        ? `/events?start=${dateRange.start}&end=${dateRange.end}`
-        : `/events?start=${dateRange.start}&end=${dateRange.end}`;
-      const data = await fetcher.get(path);
+      const data = await fetcher.get(`/events?start=${dateRange.start}&end=${dateRange.end}`);
       setEvents(data);
       setError(null);
     } catch (err) {
@@ -155,7 +151,7 @@ export default function CalendarPage() {
       </header>
 
       <div className="calendar-body">
-        {error && <div style={{ padding: '0.5rem 1rem' }}><ErrorMessage message={error} onRetry={fetchEvents} /></div>}
+        {error && <p className="text-secondary text-sm" style={{ padding: '0.5rem 1rem', cursor: 'pointer' }} onClick={fetchEvents}>{error} Tik om opnieuw te laden.</p>}
         {view === 'day' && <DayView {...viewProps} />}
         {view === 'week' && <WeekView {...viewProps} />}
         {view === 'month' && <MonthView {...viewProps} />}

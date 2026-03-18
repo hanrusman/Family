@@ -135,7 +135,7 @@ router.delete('/checked/clear', (req, res) => {
 });
 
 // PATCH /api/shopping/:id/toggle
-router.patch('/:id/toggle', (req, res) => {
+function toggleItem(req, res) {
   try {
     const db = getDb();
     const item = db.prepare('SELECT * FROM shopping_items WHERE id = ?').get(req.params.id);
@@ -154,7 +154,8 @@ router.patch('/:id/toggle', (req, res) => {
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
-});
+}
+router.patch('/:id/toggle', toggleItem);
 
 // DELETE /api/shopping/:id
 router.delete('/:id', (req, res) => {
@@ -172,4 +173,4 @@ router.delete('/:id', (req, res) => {
 
 router.get('/', getItems);
 
-module.exports = { router, getItems };
+module.exports = { router, getItems, toggleItem };

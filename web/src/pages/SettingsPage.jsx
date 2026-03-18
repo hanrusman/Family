@@ -186,7 +186,7 @@ export default function SettingsPage() {
               Open de app op je tablet met <code>?kiosk=1</code> achter de URL voor kiosk-modus (zonder login, alleen-lezen).
             </p>
             <p className="text-sm text-secondary mt-2">
-              Voorbeeld: <code>http://jouw-server:8080/?kiosk=1</code>
+              Voorbeeld: <code>http://family.c4w.nl/?kiosk=1</code>
             </p>
           </div>
         </section>

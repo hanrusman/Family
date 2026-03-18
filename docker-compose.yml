@@ -1,48 +1,33 @@
 services:
-  familiekalender-api:
-    build: ./api
+  familiekalender:
+    build: .
     volumes:
       - ./data:/app/data
     environment:
       - DATABASE_URL=sqlite:///app/data/kalender.db
       - JWT_SECRET=${JWT_SECRET:?JWT_SECRET is vereist}
       - NODE_ENV=production
-      - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID:-}
-      - GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET:-}
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.familiekalender-api.rule=Host(`${KALENDER_HOST:-kalender.home}`) && PathPrefix(`/api`)"
-      - "traefik.http.routers.familiekalender-api.entrypoints=web"
-      - "traefik.http.services.familiekalender-api.loadbalancer.server.port=3000"
+      - "traefik.http.routers.familiekalender.rule=Host(`${KALENDER_HOST:-family.c4w.nl}`)"
+      - "traefik.http.routers.familiekalender.entrypoints=web"
+      - "traefik.http.services.familiekalender.loadbalancer.server.port=3000"
     networks:
       - traefik
-      - default
-    restart: unless-stopped
-
-  familiekalender-web:
-    build: ./web
-    depends_on:
-      - familiekalender-api
-    labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.familiekalender-web.rule=Host(`${KALENDER_HOST:-kalender.home}`)"
-      - "traefik.http.routers.familiekalender-web.entrypoints=web"
-      - "traefik.http.routers.familiekalender-web.priority=1"
-      - "traefik.http.services.familiekalender-web.loadbalancer.server.port=80"
-    networks:
-      - traefik
-      - default
     restart: unless-stopped
 
   familiekalender-whatsapp:
     build: ./whatsapp
     depends_on:
-      - familiekalender-api
+      - familiekalender
     volumes:
       - ./data/whatsapp-session:/app/session
     environment:
-      - API_URL=http://familiekalender-api:3000
+      - API_URL=http://familiekalender:3000
       - API_TOKEN=${API_TOKEN:?API_TOKEN is vereist}
+    networks:
+      - default
+      - traefik
     restart: unless-stopped
 
 networks:

@@ -13,10 +13,7 @@ export default function ShoppingPage() {
   const fetchItems = useCallback(async () => {
     try {
       const fetcher = isTabletMode ? tabletApi : api;
-      const path = isTabletMode
-        ? `/shopping?show_checked=${showChecked}`
-        : `/shopping?show_checked=${showChecked}`;
-      const result = await fetcher.get(path);
+      const result = await fetcher.get(`/shopping?show_checked=${showChecked}`);
       setData(result);
     } catch (err) {
       console.warn('Kan boodschappen niet laden:', err.message);

@@ -24,10 +24,7 @@ export default function MealsPage() {
   const fetchMeals = useCallback(async () => {
     try {
       const fetcher = isTabletMode ? tabletApi : api;
-      const path = isTabletMode
-        ? `/meals?start=${weekStart}&end=${weekEnd}`
-        : `/meals?start=${weekStart}&end=${weekEnd}`;
-      const data = await fetcher.get(path);
+      const data = await fetcher.get(`/meals?start=${weekStart}&end=${weekEnd}`);
       setMeals(data);
     } catch (err) {
       console.warn('Kan weekmenu niet laden:', err.message);
