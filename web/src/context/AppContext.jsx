@@ -56,8 +56,11 @@ export function AppProvider({ children }) {
     try {
       const members = await api.get('/family');
       dispatch({ type: 'SET_FAMILY', payload: members });
-    } catch {
-      // May not be authenticated yet
+    } catch (err) {
+      // Expected to fail if not authenticated; log other errors
+      if (!err.message?.includes('401')) {
+        console.warn('Kan gezinsleden niet laden:', err.message);
+      }
     }
   }, []);
 
@@ -67,8 +70,10 @@ export function AppProvider({ children }) {
       dispatch({ type: 'SET_SETTINGS', payload: settings });
       // Apply theme
       document.documentElement.setAttribute('data-theme', settings.theme || 'dark');
-    } catch {
-      // May not be authenticated yet
+    } catch (err) {
+      if (!err.message?.includes('401')) {
+        console.warn('Kan instellingen niet laden:', err.message);
+      }
     }
   }, []);
 

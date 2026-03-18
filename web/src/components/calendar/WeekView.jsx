@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import { getWeekDays, toDateString, isToday, formatNL, timeString, isSameDay } from '../../utils/dateUtils';
+import { getWeekDays, toDateString, isToday, formatNL, timeString } from '../../utils/dateUtils';
 import './CalendarViews.css';
 
 export default function WeekView({ currentDate, events, onDayClick, onEventClick }) {

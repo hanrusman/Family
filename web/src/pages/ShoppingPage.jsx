@@ -18,7 +18,9 @@ export default function ShoppingPage() {
         : `/shopping?show_checked=${showChecked}`;
       const result = await fetcher.get(path);
       setData(result);
-    } catch { /* offline */ }
+    } catch (err) {
+      console.warn('Kan boodschappen niet laden:', err.message);
+    }
   }, [showChecked, isTabletMode]);
 
   usePolling(fetchItems, 15000, [showChecked]);
@@ -44,7 +46,8 @@ export default function ShoppingPage() {
 
   const toggleItem = async (id) => {
     try {
-      const fetcher = isTabletMode ? api : api; // Always use auth api for write
+      // Tablet uses tabletApi for toggle (no auth needed), phone uses api
+      const fetcher = isTabletMode ? tabletApi : api;
       await fetcher.patch(`/shopping/${id}/toggle`);
       fetchItems();
     } catch (err) {

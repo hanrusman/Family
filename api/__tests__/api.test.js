@@ -367,4 +367,57 @@ describe('Settings', () => {
     });
     expect(res.status).toBe(401);
   });
+
+  test('PUT /api/settings ignores unknown keys', async () => {
+    const res = await authPut('/api/settings', {
+      theme: 'dark',
+      evil_key: 'should_not_persist',
+    });
+    expect(res.status).toBe(200);
+    expect(res.body.theme).toBe('dark');
+    expect(res.body.evil_key).toBeUndefined();
+  });
+});
+
+// ---- Edge Cases ----
+describe('Edge Cases', () => {
+  test('POST /api/shopping/bulk with empty items returns empty array', async () => {
+    const res = await authPost('/api/shopping/bulk', { items: [] });
+    expect(res.status).toBe(201);
+    expect(res.body).toEqual([]);
+  });
+
+  test('POST /api/shopping/bulk with items missing name', async () => {
+    const res = await authPost('/api/shopping/bulk', {
+      items: [{ name: '' }, { name: 'Appels' }],
+    });
+    expect(res.status).toBe(201);
+    expect(res.body.length).toBe(1);
+    expect(res.body[0].name).toBe('Appels');
+  });
+
+  test('DELETE /api/shopping/checked/clear is reachable (not caught by /:id)', async () => {
+    // First add and check an item
+    const addRes = await authPost('/api/shopping', { name: 'Test Clear Item' });
+    await request(app)
+      .patch(`/api/shopping/${addRes.body.id}/toggle`)
+      .set('Authorization', `Bearer ${token}`);
+
+    const clearRes = await authDelete('/api/shopping/checked/clear');
+    expect(clearRes.status).toBe(200);
+    expect(clearRes.body.success).toBe(true);
+    expect(clearRes.body.removed).toBeGreaterThanOrEqual(1);
+  });
+
+  test('POST /api/auth/login rate limiting after 5 failed attempts', async () => {
+    // Make 5 failed attempts
+    for (let i = 0; i < 5; i++) {
+      await request(app).post('/api/auth/login').send({ pin: '0000' });
+    }
+
+    // 6th attempt should be rate limited
+    const res = await request(app).post('/api/auth/login').send({ pin: '0000' });
+    expect(res.status).toBe(429);
+    expect(res.body.error).toContain('Te veel pogingen');
+  });
 });

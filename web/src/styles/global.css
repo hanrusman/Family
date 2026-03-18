@@ -66,8 +66,7 @@ body {
   width: 100vw;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  user-select: none;
-  -webkit-user-select: none;
+  /* user-select on interactive elements only, not inputs */
 }
 
 #root {
@@ -93,6 +92,12 @@ h3 { font-size: 1.25rem; font-weight: 600; }
 ::-webkit-scrollbar-thumb {
   background: var(--border-color);
   border-radius: 3px;
+}
+
+/* Prevent text selection on interactive elements, but allow on inputs */
+.btn, .tab-item, .chore-item, .shopping-item, .tab-bar, .calendar-nav {
+  user-select: none;
+  -webkit-user-select: none;
 }
 
 /* === Buttons === */

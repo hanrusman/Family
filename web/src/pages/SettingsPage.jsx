@@ -9,8 +9,7 @@ export default function SettingsPage() {
   const { settings, updateSettings, loadFamily, familyMembers, logout } = useApp();
   const [members, setMembers] = useState([]);
   const [newMember, setNewMember] = useState({ name: '', role: 'child', color: '#3B82F6' });
-  const [localSettings, setLocalSettings] = useState({});
-  const [saving, setSaving] = useState(false);
+  const [localSettings, setLocalSettings] = useState(settings || {});
 
   useEffect(() => {
     setMembers(familyMembers);

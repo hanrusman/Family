@@ -11,6 +11,7 @@ import WeekView from '../components/calendar/WeekView';
 import MonthView from '../components/calendar/MonthView';
 import AgendaView from '../components/calendar/AgendaView';
 import EventModal from '../components/calendar/EventModal';
+import ErrorMessage from '../components/common/ErrorMessage';
 import './CalendarPage.css';
 
 const VIEWS = [
@@ -25,6 +26,7 @@ export default function CalendarPage() {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [view, setView] = useState(settings.default_view || 'week');
   const [events, setEvents] = useState([]);
+  const [error, setError] = useState(null);
   const [showModal, setShowModal] = useState(false);
   const [editingEvent, setEditingEvent] = useState(null);
 
@@ -56,8 +58,9 @@ export default function CalendarPage() {
         : `/events?start=${dateRange.start}&end=${dateRange.end}`;
       const data = await fetcher.get(path);
       setEvents(data);
-    } catch {
-      // Offline fallback
+      setError(null);
+    } catch (err) {
+      setError('Kan agenda niet laden. Controleer de verbinding.');
     }
   }, [dateRange, isTabletMode]);
 
@@ -152,6 +155,7 @@ export default function CalendarPage() {
       </header>
 
       <div className="calendar-body">
+        {error && <div style={{ padding: '0.5rem 1rem' }}><ErrorMessage message={error} onRetry={fetchEvents} /></div>}
         {view === 'day' && <DayView {...viewProps} />}
         {view === 'week' && <WeekView {...viewProps} />}
         {view === 'month' && <MonthView {...viewProps} />}

@@ -2,6 +2,12 @@ const express = require('express');
 const { getDb } = require('../models/database');
 const router = express.Router();
 
+const ALLOWED_SETTINGS = new Set([
+  'theme', 'language', 'idle_timeout', 'default_view',
+  'day_start_hour', 'day_end_hour', 'whatsapp_enabled',
+  'morning_briefing_time', 'calendar_sync_interval',
+]);
+
 // GET /api/settings
 router.get('/', (req, res) => {
   try {
@@ -30,6 +36,7 @@ router.put('/', (req, res) => {
 
     const updateMany = db.transaction(() => {
       for (const [key, value] of Object.entries(updates)) {
+        if (!ALLOWED_SETTINGS.has(key)) continue;
         upsert.run(key, String(value), String(value));
       }
     });

@@ -1,5 +1,4 @@
 import React, { useMemo } from 'react';
-import { parseISO, isToday } from '../../utils/dateUtils';
 import { getTimePosition, getEventHeight, timeString, toDateString } from '../../utils/dateUtils';
 import './CalendarViews.css';
 

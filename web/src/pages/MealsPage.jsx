@@ -29,7 +29,9 @@ export default function MealsPage() {
         : `/meals?start=${weekStart}&end=${weekEnd}`;
       const data = await fetcher.get(path);
       setMeals(data);
-    } catch { /* offline */ }
+    } catch (err) {
+      console.warn('Kan weekmenu niet laden:', err.message);
+    }
   }, [weekStart, weekEnd, isTabletMode]);
 
   usePolling(fetchMeals, 60000, [weekStart]);

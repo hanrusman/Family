@@ -36,6 +36,15 @@ describe('Command Parser', () => {
     expect(result.event.start_time).toContain('09:00');
   });
 
+  test('handles end-time overflow at 23:00 correctly', () => {
+    const result = parseCommand('voeg toe: Feest 23:30');
+    expect(result.type).toBe('add_event');
+    expect(result.event.start_time).toContain('23:30');
+    // End time should be next day 00:30, not invalid 24:30
+    expect(result.event.end_time).not.toContain('24:');
+    expect(result.event.end_time).toContain('00:30');
+  });
+
   test('parses shopping add command', () => {
     const result = parseCommand('boodschappen: melk, brood, kaas');
     expect(result.type).toBe('shopping_add');

@@ -95,14 +95,18 @@ function parseCommand(text) {
     }
 
     const [hours, mins] = time.split(':');
-    const endHour = String(parseInt(hours) + 1).padStart(2, '0');
+    // Handle end time overflow (e.g. 23:00 + 1h)
+    const startDate = new Date(`${date}T${time}:00`);
+    const endDate = new Date(startDate.getTime() + 60 * 60 * 1000);
+    const endTime = endDate.toISOString().slice(0, 19);
+    const endDateStr = endDate.toISOString().split('T')[0];
 
     return {
       type: 'add_event',
       event: {
         title: title || 'Afspraak',
         start_time: `${date}T${time}:00`,
-        end_time: `${date}T${endHour}:${mins}:00`,
+        end_time: endTime,
       },
     };
   }

@@ -16,12 +16,11 @@ export default function ChoresPage() {
   const fetchChores = useCallback(async () => {
     try {
       const fetcher = isTabletMode ? tabletApi : api;
-      const path = isTabletMode
-        ? `/chores?date=${toDateString(currentDate)}`
-        : `/chores?date=${toDateString(currentDate)}`;
-      const data = await fetcher.get(path);
+      const data = await fetcher.get(`/chores?date=${toDateString(currentDate)}`);
       setChores(data);
-    } catch { /* offline */ }
+    } catch (err) {
+      console.warn('Kan klusjes niet laden:', err.message);
+    }
   }, [currentDate, isTabletMode]);
 
   const fetchStats = useCallback(async () => {
@@ -29,7 +28,9 @@ export default function ChoresPage() {
     try {
       const data = await api.get('/chores/stats');
       setStats(data);
-    } catch { /* ignore */ }
+    } catch (err) {
+      console.warn('Kan klusjes-stats niet laden:', err.message);
+    }
   }, [isTabletMode]);
 
   usePolling(fetchChores, 30000, [toDateString(currentDate)]);

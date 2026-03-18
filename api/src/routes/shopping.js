@@ -108,11 +108,27 @@ router.post('/bulk', (req, res) => {
     });
     insertMany();
 
+    if (ids.length === 0) {
+      return res.status(201).json([]);
+    }
+
     const created = db.prepare(
       `SELECT * FROM shopping_items WHERE id IN (${ids.map(() => '?').join(',')})`
     ).all(...ids);
 
     res.status(201).json(created);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// DELETE /api/shopping/checked/clear - Remove all checked items
+// IMPORTANT: Must be before /:id routes to avoid route collision
+router.delete('/checked/clear', (req, res) => {
+  try {
+    const db = getDb();
+    const result = db.prepare('DELETE FROM shopping_items WHERE checked = 1').run();
+    res.json({ success: true, removed: result.changes });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -149,17 +165,6 @@ router.delete('/:id', (req, res) => {
       return res.status(404).json({ error: 'Item niet gevonden' });
     }
     res.json({ success: true });
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-});
-
-// DELETE /api/shopping/checked/clear - Remove all checked items
-router.delete('/checked/clear', (req, res) => {
-  try {
-    const db = getDb();
-    const result = db.prepare('DELETE FROM shopping_items WHERE checked = 1').run();
-    res.json({ success: true, removed: result.changes });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
