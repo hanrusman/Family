@@ -1,35 +1,87 @@
 services:
-  familiekalender:
+  family:
     build: .
+    container_name: family
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    user: "1000:1000"
+    tmpfs:
+      - /tmp:rw,noexec,nosuid
     volumes:
-      - ./data:/app/data
+      - ./data:/app/data:rw
     environment:
       - DATABASE_URL=sqlite:///app/data/kalender.db
-      - JWT_SECRET=${JWT_SECRET:?JWT_SECRET is vereist}
       - NODE_ENV=production
+      - TZ=Europe/Amsterdam
+      - JWT_SECRET=${FAMILY_JWT_SECRET}
+      - API_TOKEN=${FAMILY_API_TOKEN}
+    networks:
+      - family-internal
+      - traefik
+    healthcheck:
+      test: ["CMD", "node", "-e", "require('http').get('http://localhost:3000/api/health', r => { process.exit(r.statusCode === 200 ? 0 : 1); }).on('error', () => process.exit(1))"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+          cpus: '0.5'
+          pids: 100
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.familiekalender.rule=Host(`${KALENDER_HOST:-family.c4w.nl}`)"
-      - "traefik.http.routers.familiekalender.entrypoints=web"
-      - "traefik.http.services.familiekalender.loadbalancer.server.port=3000"
-    networks:
-      - traefik
-    restart: unless-stopped
+      - "traefik.http.routers.family.rule=Host(`family.c4w.nl`)"
+      - "traefik.http.routers.family.entrypoints=websecure"
+      - "traefik.http.routers.family.tls.certresolver=letsencrypt"
+      - "traefik.http.services.family.loadbalancer.server.port=3000"
 
-  familiekalender-whatsapp:
+  family-whatsapp:
     build: ./whatsapp
-    depends_on:
-      - familiekalender
-    volumes:
-      - ./data/whatsapp-session:/app/session
-    environment:
-      - API_URL=http://familiekalender:3000
-      - API_TOKEN=${API_TOKEN:?API_TOKEN is vereist}
-    networks:
-      - default
-      - traefik
+    container_name: family-whatsapp
     restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    user: "1000:1000"
+    tmpfs:
+      - /tmp:rw,noexec,nosuid
+    depends_on:
+      family:
+        condition: service_healthy
+    volumes:
+      - ./data/whatsapp-session:/app/session:rw
+    environment:
+      - API_URL=http://family:3000
+      - TZ=Europe/Amsterdam
+      - API_TOKEN=${FAMILY_API_TOKEN}
+      - ALLOWED_NUMBERS=${FAMILY_ALLOWED_NUMBERS}
+    networks:
+      - family-internal
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+          cpus: '0.5'
+          pids: 200
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
 
 networks:
+  family-internal:
+    internal: true
   traefik:
     external: true
