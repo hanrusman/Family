@@ -2,7 +2,7 @@ FROM node:20-alpine AS web-build
 
 WORKDIR /build
 COPY web/package*.json ./
-RUN npm ci
+RUN npm ci --legacy-peer-deps
 COPY web/ ./
 RUN npm run build
 
