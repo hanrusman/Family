@@ -86,10 +86,10 @@ export default function HomePage() {
     <div className="px-4 pt-6 lg:px-8 lg:pt-8 max-w-5xl mx-auto">
       {/* Header */}
       <div className="mb-8">
-        <h1 className="text-3xl lg:text-4xl font-bold text-text-main">
+        <h1 className="text-3xl lg:text-4xl font-bold text-[var(--text-primary)]">
           {greeting}!
         </h1>
-        <p className="text-text-main/60 text-lg mt-1 capitalize">
+        <p className="text-[var(--text-secondary)] text-lg mt-1 capitalize">
           {todayFormatted}
         </p>
       </div>
@@ -99,9 +99,9 @@ export default function HomePage() {
         {/* Left column */}
         <div className="flex flex-col gap-6">
           {/* Agenda card */}
-          <div className="bg-surface rounded-xl shadow-soft p-6">
+          <div className="bg-[var(--bg-card)] rounded-xl shadow-soft p-6">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-semibold text-text-main">
+              <h2 className="text-lg font-semibold text-[var(--text-primary)]">
                 Agenda vandaag
               </h2>
               <button
@@ -113,7 +113,7 @@ export default function HomePage() {
             </div>
 
             {todayEvents.length === 0 ? (
-              <p className="text-text-main/40 text-sm py-4">
+              <p className="text-[var(--text-muted)] text-sm py-4">
                 Geen afspraken vandaag
               </p>
             ) : (
@@ -127,10 +127,10 @@ export default function HomePage() {
                       {EVENT_EMOJIS[i % EVENT_EMOJIS.length]}
                     </span>
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-text-main truncate">
+                      <p className="text-sm font-medium text-[var(--text-primary)] truncate">
                         {event.title || event.summary}
                       </p>
-                      <p className="text-xs text-text-main/50">
+                      <p className="text-xs text-[var(--text-muted)]">
                         {event.start && timeString(event.start)}
                         {event.end && ` - ${timeString(event.end)}`}
                         {event.location && ` · ${event.location}`}
@@ -148,19 +148,19 @@ export default function HomePage() {
           </div>
 
           {/* Vanavond Eten We card */}
-          <div className="bg-surface rounded-xl shadow-soft p-6">
-            <h2 className="text-lg font-semibold text-text-main mb-4">
+          <div className="bg-[var(--bg-card)] rounded-xl shadow-soft p-6">
+            <h2 className="text-lg font-semibold text-[var(--text-primary)] mb-4">
               Vanavond Eten We
             </h2>
             {dinner ? (
               <div className="flex items-center gap-4">
                 <span className="text-4xl">🍽️</span>
                 <div>
-                  <p className="text-xl font-semibold text-text-main">
+                  <p className="text-xl font-semibold text-[var(--text-primary)]">
                     {dinner.title || dinner.recipe || dinner.name || 'Avondeten'}
                   </p>
                   {(dinner.cook_id || dinner.member_id) && (
-                    <p className="text-sm text-text-main/50 mt-1">
+                    <p className="text-sm text-[var(--text-muted)] mt-1">
                       Kok: {getMemberName(dinner.cook_id || dinner.member_id)}
                     </p>
                   )}
@@ -170,7 +170,7 @@ export default function HomePage() {
               <div className="flex items-center gap-4">
                 <span className="text-4xl">🤔</span>
                 <div>
-                  <p className="text-text-main/40 text-sm">
+                  <p className="text-[var(--text-muted)] text-sm">
                     Nog geen avondeten gepland
                   </p>
                   <button
@@ -188,9 +188,9 @@ export default function HomePage() {
         {/* Right column */}
         <div className="flex flex-col gap-6">
           {/* Klusjes card */}
-          <div className="bg-surface rounded-xl shadow-soft p-6">
+          <div className="bg-[var(--bg-card)] rounded-xl shadow-soft p-6">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-semibold text-text-main">
+              <h2 className="text-lg font-semibold text-[var(--text-primary)]">
                 Klusjes vandaag
               </h2>
               <button
@@ -202,7 +202,7 @@ export default function HomePage() {
             </div>
 
             {todayChores.length === 0 ? (
-              <p className="text-text-main/40 text-sm py-4">
+              <p className="text-[var(--text-muted)] text-sm py-4">
                 Geen klusjes vandaag
               </p>
             ) : (
@@ -213,14 +213,14 @@ export default function HomePage() {
                     <div
                       key={chore.id || i}
                       className={`flex items-center gap-3 p-3 rounded-lg transition-colors ${
-                        done ? 'bg-success/10' : 'bg-muted/20'
+                        done ? 'bg-success/10' : 'bg-[var(--bg-hover)]'
                       }`}
                     >
                       <span
                         className={`flex-shrink-0 w-6 h-6 rounded-full border-2 flex items-center justify-center ${
                           done
                             ? 'border-success bg-success text-white'
-                            : 'border-text-main/20'
+                            : 'border-[var(--border-color)]'
                         }`}
                       >
                         {done && (
@@ -232,8 +232,8 @@ export default function HomePage() {
                       <span
                         className={`flex-1 text-sm ${
                           done
-                            ? 'line-through text-text-main/40'
-                            : 'text-text-main font-medium'
+                            ? 'line-through text-[var(--text-muted)]'
+                            : 'text-[var(--text-primary)] font-medium'
                         }`}
                       >
                         {chore.title || chore.name}
@@ -251,9 +251,9 @@ export default function HomePage() {
           </div>
 
           {/* Boodschappen card */}
-          <div className="bg-surface rounded-xl shadow-soft p-6">
+          <div className="bg-[var(--bg-card)] rounded-xl shadow-soft p-6">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-semibold text-text-main">
+              <h2 className="text-lg font-semibold text-[var(--text-primary)]">
                 Boodschappen
               </h2>
               <button
@@ -265,7 +265,7 @@ export default function HomePage() {
             </div>
 
             {shoppingItems.length === 0 ? (
-              <p className="text-text-main/40 text-sm py-4">
+              <p className="text-[var(--text-muted)] text-sm py-4">
                 Boodschappenlijst is leeg
               </p>
             ) : (
@@ -275,11 +275,11 @@ export default function HomePage() {
                     key={item.id || i}
                     className="flex items-center gap-3"
                   >
-                    <span className="flex-shrink-0 w-5 h-5 rounded border-2 border-text-main/20" />
-                    <span className="text-sm text-text-main">
+                    <span className="flex-shrink-0 w-5 h-5 rounded border-2 border-[var(--border-color)]" />
+                    <span className="text-sm text-[var(--text-primary)]">
                       {item.name || item.title}
                       {item.quantity && item.quantity > 1 && (
-                        <span className="text-text-main/40 ml-1">
+                        <span className="text-[var(--text-muted)] ml-1">
                           x{item.quantity}
                         </span>
                       )}

@@ -96,11 +96,11 @@ export default function ChoresPage() {
   const totalPoints = chores.filter((c) => c.completed).reduce((sum, c) => sum + (c.points || 0), 0);
 
   return (
-    <div className="flex flex-col h-full bg-background-light dark:bg-background-dark">
+    <div className="flex flex-col h-full bg-[var(--bg-primary)]">
       {/* Header */}
       <header className="px-8 pt-8 pb-6">
         <div className="flex items-center justify-between mb-1">
-          <h1 className="text-4xl font-bold text-text-main dark:text-white font-display">
+          <h1 className="text-4xl font-bold text-[var(--text-primary)] font-display">
             Klusjes
           </h1>
           <div className="flex items-center gap-3">
@@ -122,7 +122,7 @@ export default function ChoresPage() {
             )}
           </div>
         </div>
-        <p className="text-muted dark:text-muted/70 text-sm mb-5">
+        <p className="text-[var(--text-muted)] text-sm mb-5">
           Wie heeft de meeste punten vandaag?
         </p>
 
@@ -130,14 +130,14 @@ export default function ChoresPage() {
         {totalCount > 0 && (
           <div>
             <div className="flex items-center justify-between mb-2">
-              <span className="text-sm font-semibold text-text-main dark:text-white/80">
+              <span className="text-sm font-semibold text-[var(--text-primary)]">
                 Familie Progressie
               </span>
-              <span className="text-sm font-bold text-text-main dark:text-white/80">
+              <span className="text-sm font-bold text-[var(--text-primary)]">
                 {progressPct}%
               </span>
             </div>
-            <div className="h-3 bg-muted/40 dark:bg-white/10 rounded-full overflow-hidden">
+            <div className="h-3 bg-[var(--bg-tertiary)] rounded-full overflow-hidden">
               <div
                 className={`h-full rounded-full transition-all duration-700 ease-out ${
                   progressPct === 100 ? 'bg-success' : 'bg-primary'
@@ -154,7 +154,7 @@ export default function ChoresPage() {
         {totalCount === 0 ? (
           <div className="flex flex-col items-center justify-center py-20">
             <span className="text-6xl mb-4">🧹</span>
-            <p className="text-text-main/50 dark:text-white/40 text-lg">
+            <p className="text-[var(--text-muted)] text-lg">
               Geen klusjes voor vandaag
             </p>
             {!isTabletMode && (
@@ -180,13 +180,13 @@ export default function ChoresPage() {
                   className={`w-[280px] flex-shrink-0 rounded-2xl p-6 transition-all duration-500 ${
                     allDone
                       ? 'bg-success/20 border-2 border-dashed border-success/40'
-                      : 'bg-white/60 dark:bg-white/5 border border-muted/30 dark:border-white/10'
+                      : 'bg-[var(--bg-card)] border border-[var(--border-color)]'
                   }`}
                 >
                   {/* Avatar */}
                   <div className="flex flex-col items-center mb-4">
                     <div
-                      className="w-[120px] h-[120px] rounded-full border-4 border-white dark:border-white/20 flex items-center justify-center shadow-soft mb-3"
+                      className="w-[120px] h-[120px] rounded-full border-4 border-[var(--bg-card)] flex items-center justify-center shadow-soft mb-3"
                       style={{ backgroundColor: group.member_color }}
                     >
                       <span className="text-5xl text-white font-bold select-none">
@@ -195,7 +195,7 @@ export default function ChoresPage() {
                     </div>
 
                     {/* Name */}
-                    <h2 className="text-2xl font-bold text-text-main dark:text-white text-center">
+                    <h2 className="text-2xl font-bold text-[var(--text-primary)] text-center">
                       {group.member_name}
                     </h2>
 
@@ -212,7 +212,7 @@ export default function ChoresPage() {
 
                     {/* Progress bar */}
                     <div className="w-full mt-3">
-                      <div className="h-3 bg-muted/30 dark:bg-white/10 rounded-full overflow-hidden">
+                      <div className="h-3 bg-[var(--bg-tertiary)] rounded-full overflow-hidden">
                         <div
                           className={`h-full rounded-full transition-all duration-500 ease-out ${
                             allDone ? 'bg-success' : 'bg-primary'
@@ -220,7 +220,7 @@ export default function ChoresPage() {
                           style={{ width: `${memberPct}%` }}
                         />
                       </div>
-                      <p className="text-xs text-text-main/60 dark:text-white/50 text-center mt-1.5 font-medium">
+                      <p className="text-xs text-[var(--text-secondary)] text-center mt-1.5 font-medium">
                         {memberCompleted}/{memberTotal} Klusjes klaar
                       </p>
                     </div>
@@ -236,7 +236,7 @@ export default function ChoresPage() {
                         className={`w-full rounded-xl p-4 flex items-center gap-4 transition-all duration-300 text-left ${
                           chore.completed
                             ? 'bg-success opacity-60 text-white shadow-none'
-                            : 'bg-background-light dark:bg-white/5 shadow-soft border border-muted/50 dark:border-white/10 hover:scale-[1.02] active:scale-[0.98]'
+                            : 'bg-[var(--bg-primary)] shadow-soft border border-[var(--border-color)] hover:scale-[1.02] active:scale-[0.98]'
                         }`}
                       >
                         {/* Emoji icon */}
@@ -244,7 +244,7 @@ export default function ChoresPage() {
                           className={`w-12 h-12 rounded-full flex items-center justify-center flex-shrink-0 text-xl ${
                             chore.completed
                               ? 'bg-white/20 grayscale'
-                              : 'bg-muted/30 dark:bg-white/10'
+                              : 'bg-[var(--bg-tertiary)]'
                           }`}
                         >
                           {chore.icon || '📋'}
@@ -256,7 +256,7 @@ export default function ChoresPage() {
                             className={`text-lg font-bold block truncate ${
                               chore.completed
                                 ? 'line-through text-white/80'
-                                : 'text-text-main dark:text-white'
+                                : 'text-[var(--text-primary)]'
                             }`}
                           >
                             {chore.title}
@@ -277,7 +277,7 @@ export default function ChoresPage() {
                           className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 transition-all ${
                             chore.completed
                               ? 'bg-white text-success'
-                              : 'border-2 border-muted dark:border-white/20'
+                              : 'border-2 border-[var(--border-color)]'
                           }`}
                         >
                           {chore.completed && (

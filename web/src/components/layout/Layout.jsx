@@ -33,11 +33,11 @@ export default function Layout({ children }) {
   const navItems = isTabletMode ? NAV_ITEMS : [...NAV_ITEMS, SETTINGS_ITEM];
 
   return (
-    <div className="h-screen flex flex-col bg-background-light font-display">
+    <div className="h-screen flex flex-col bg-[var(--bg-primary)] font-display">
       {/* Dark mode toggle - fixed top right */}
       <button
         onClick={() => setDark(!dark)}
-        className="fixed top-4 right-4 z-40 w-10 h-10 rounded-full bg-white shadow-soft flex items-center justify-center text-lg hover:scale-110 transition-transform border border-muted/30"
+        className="fixed top-4 right-4 z-40 w-10 h-10 rounded-full bg-[var(--bg-card)] shadow-soft flex items-center justify-center text-lg hover:scale-110 transition-transform border border-[var(--border-color)]"
         aria-label={dark ? 'Schakel naar licht thema' : 'Schakel naar donker thema'}
       >
         {dark ? '☀️' : '🌙'}
@@ -50,7 +50,7 @@ export default function Layout({ children }) {
 
       {/* Floating pill navigation */}
       <nav
-        className={`fixed bottom-6 left-1/2 -translate-x-1/2 bg-white rounded-full shadow-[0_20px_40px_rgba(38,70,83,0.15)] p-2 flex gap-2 border border-[#E9ECEF]/30 z-50 ${
+        className={`fixed bottom-6 left-1/2 -translate-x-1/2 bg-[var(--bg-card)] rounded-full shadow-[0_20px_40px_rgba(38,70,83,0.15)] p-2 flex gap-2 border border-[var(--border-color)] z-50 ${
           isTabletMode ? 'nav-pill-tablet' : ''
         }`}
         role="navigation"
@@ -69,7 +69,7 @@ export default function Layout({ children }) {
                 ${
                   isActive
                     ? 'bg-primary/30 text-primary border border-primary/20'
-                    : 'text-text-main/50 hover:bg-muted/30 border border-transparent'
+                    : 'text-[var(--text-muted)] hover:bg-[var(--bg-hover)] border border-transparent'
                 }
               `}
               aria-current={isActive ? 'page' : undefined}

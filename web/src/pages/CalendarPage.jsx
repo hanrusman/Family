@@ -23,7 +23,7 @@ const VIEWS = [
 export default function CalendarPage() {
   const { settings, isTabletMode, familyMembers } = useApp();
   const [currentDate, setCurrentDate] = useState(new Date());
-  const [view, setView] = useState(settings.default_view || 'week');
+  const [view, setView] = useState(settings.default_view || 'agenda');
   const [events, setEvents] = useState([]);
   const [meals, setMeals] = useState([]);
   const [chores, setChores] = useState([]);

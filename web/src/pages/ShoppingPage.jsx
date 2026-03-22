@@ -4,10 +4,10 @@ import { api, tabletApi } from '../utils/api';
 import { usePolling } from '../hooks/usePolling';
 
 const CATEGORY_EMOJI = {
-  groenten: '🥬', fruit: '🍎', zuivel: '🥛', vlees: '🥩', vis: '🐟',
-  brood: '🥖', dranken: '🥤', snacks: '🍿', pasta: '🍝', rijst: '🍚',
-  conserven: '🥫', diepvries: '🧊', huishouden: '🧹', verzorging: '🧴',
-  overig: '🛒', kruiden: '🌿', sauzen: '🫙', kaas: '🧀', eieren: '🥚',
+  groente_fruit: '🥬', zuivel: '🥛', vlees_vis: '🥩',
+  brood_bakkerij: '🥖', dranken: '🥤', conserven: '🥫',
+  diepvries: '🧊', huishouden: '🧹', verzorging: '🧴',
+  overig: '🛒', kruiden: '🌿', sauzen: '🫙',
 };
 
 export default function ShoppingPage() {
@@ -34,14 +34,45 @@ export default function ShoppingPage() {
     const items = newItem.split(',').map((s) => s.trim()).filter(Boolean);
     try {
       if (items.length === 1) {
-        await api.post('/shopping', { name: items[0] });
+        await api.post('/shopping', { name: items[0], quantity: '1' });
       } else {
-        await api.post('/shopping/bulk', { items: items.map((name) => ({ name })) });
+        await api.post('/shopping/bulk', { items: items.map((name) => ({ name, quantity: '1' })) });
       }
       setNewItem('');
       fetchItems();
     } catch (err) {
       alert(err.message);
+    }
+  };
+
+  const updateQuantity = async (item, delta) => {
+    const currentQty = parseInt(item.quantity) || 1;
+    const newQty = currentQty + delta;
+
+    if (newQty < 1) {
+      // Verwijder item
+      try {
+        await api.delete(`/shopping/${item.id}`);
+        fetchItems();
+      } catch (err) {
+        console.error(err);
+      }
+      return;
+    }
+
+    try {
+      await api.patch(`/shopping/${item.id}`, { quantity: String(newQty) });
+      // Optimistic update
+      setData((prev) => ({
+        ...prev,
+        items: prev.items.map((i) => i.id === item.id ? { ...i, quantity: String(newQty) } : i),
+        grouped: prev.grouped.map((g) => ({
+          ...g,
+          items: g.items.map((i) => i.id === item.id ? { ...i, quantity: String(newQty) } : i),
+        })),
+      }));
+    } catch (err) {
+      console.error(err);
     }
   };
 
@@ -68,22 +99,22 @@ export default function ShoppingPage() {
   const checkedCount = data.items.filter((i) => i.checked).length;
 
   return (
-    <div className="flex flex-col h-full bg-background-light">
+    <div className="flex flex-col h-full bg-[var(--bg-primary)]">
       {/* Header */}
       <header className="w-full px-8 py-6 shrink-0">
         <div className="max-w-3xl mx-auto flex flex-wrap justify-between items-center gap-4">
           <div>
-            <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight text-text-main">
+            <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight text-[var(--text-primary)]">
               Boodschappen 🛒
             </h1>
-            <p className="text-text-main/70 text-lg font-medium mt-1">
+            <p className="text-[var(--text-secondary)] text-lg font-medium mt-1">
               {uncheckedCount} items op de lijst
             </p>
           </div>
           <div className="flex items-center gap-3">
             {checkedCount > 0 && (
               <button
-                className="bg-white px-5 py-2.5 rounded-full shadow-soft font-bold text-text-main text-sm border border-muted/50 hover:bg-background-light transition-colors active:scale-95"
+                className="bg-[var(--bg-card)] px-5 py-2.5 rounded-full shadow-soft font-bold text-[var(--text-primary)] text-sm border border-[var(--border-color)] hover:bg-[var(--bg-hover)] transition-colors active:scale-95"
                 onClick={clearChecked}
               >
                 Opruimen ({checkedCount})
@@ -98,7 +129,7 @@ export default function ShoppingPage() {
         <div className="px-8 pb-4">
           <form className="max-w-3xl mx-auto flex gap-3" onSubmit={addItem}>
             <input
-              className="flex-1 px-5 py-3 bg-white rounded-full border border-muted shadow-soft text-lg font-medium text-text-main placeholder:text-text-main/40 focus:outline-none focus:border-primary transition-colors"
+              className="flex-1 px-5 py-3 bg-[var(--bg-input)] rounded-full border border-[var(--border-color)] shadow-soft text-lg font-medium text-[var(--text-primary)] placeholder:text-[var(--text-muted)] focus:outline-none focus:border-primary transition-colors"
               value={newItem}
               onChange={(e) => setNewItem(e.target.value)}
               placeholder="Item toevoegen (komma's voor meerdere)"
@@ -118,7 +149,7 @@ export default function ShoppingPage() {
         <div className="max-w-3xl mx-auto flex flex-col gap-6 pt-2">
           {data.grouped.length === 0 ? (
             <div className="flex items-center justify-center py-16">
-              <p className="text-text-main/50 text-lg font-medium">Boodschappenlijst is leeg</p>
+              <p className="text-[var(--text-muted)] text-lg font-medium">Boodschappenlijst is leeg</p>
             </div>
           ) : (
             data.grouped.map((group) => (
@@ -126,56 +157,78 @@ export default function ShoppingPage() {
                 {/* Category header */}
                 <div className="flex items-center gap-2 mb-3">
                   <span className="text-xl">{CATEGORY_EMOJI[group.category] || '🛒'}</span>
-                  <span className="text-sm font-bold text-text-main/50 uppercase tracking-wider">
+                  <span className="text-sm font-bold text-[var(--text-muted)] uppercase tracking-wider">
                     {group.label}
                   </span>
-                  <span className="text-xs text-text-main/40 font-medium">{group.items.length}</span>
+                  <span className="text-xs text-[var(--text-muted)] font-medium">{group.items.length}</span>
                 </div>
 
                 {/* Items */}
                 <div className="flex flex-col gap-2">
-                  {group.items.map((item) => (
-                    <button
-                      key={item.id}
-                      className={`w-full flex items-center gap-4 bg-white rounded-lg p-4 text-left transition-all active:scale-[0.98] border ${
-                        item.checked
-                          ? 'border-success/30 opacity-50'
-                          : 'border-muted/50 hover:border-primary/30 hover:shadow-soft'
-                      }`}
-                      onClick={() => toggleItem(item.id)}
-                    >
-                      {/* Checkbox */}
+                  {group.items.map((item) => {
+                    const qty = parseInt(item.quantity) || 1;
+                    return (
                       <div
-                        className={`w-7 h-7 rounded-lg border-2 flex items-center justify-center shrink-0 transition-all ${
+                        key={item.id}
+                        className={`w-full flex items-center gap-3 bg-[var(--bg-card)] rounded-lg p-3 transition-all border ${
                           item.checked
-                            ? 'bg-success border-success text-white'
-                            : 'border-muted bg-white'
+                            ? 'border-success/30 opacity-50'
+                            : 'border-[var(--border-color)]'
                         }`}
                       >
-                        {item.checked && (
-                          <span className="text-sm font-bold">✓</span>
+                        {/* Checkbox */}
+                        <button
+                          onClick={() => toggleItem(item.id)}
+                          className={`w-7 h-7 rounded-lg border-2 flex items-center justify-center shrink-0 transition-all ${
+                            item.checked
+                              ? 'bg-success border-success text-white'
+                              : 'border-[var(--border-color)] bg-[var(--bg-card)] hover:border-primary'
+                          }`}
+                        >
+                          {item.checked && <span className="text-sm font-bold">✓</span>}
+                        </button>
+
+                        {/* Item name */}
+                        <span
+                          className={`text-lg font-bold flex-1 ${
+                            item.checked
+                              ? 'line-through text-[var(--text-muted)]'
+                              : 'text-[var(--text-primary)]'
+                          }`}
+                        >
+                          {item.name}
+                        </span>
+
+                        {/* Quantity controls */}
+                        {!item.checked && (
+                          <div className="flex items-center gap-1 shrink-0">
+                            <button
+                              onClick={() => updateQuantity(item, -1)}
+                              className="w-8 h-8 rounded-full bg-[var(--bg-tertiary,var(--bg-hover))] text-[var(--text-secondary)] hover:bg-[var(--bg-hover)] flex items-center justify-center font-bold text-lg transition-colors active:scale-90"
+                              title={qty <= 1 ? 'Verwijderen' : 'Minder'}
+                            >
+                              {qty <= 1 ? '🗑' : '−'}
+                            </button>
+                            <span className="w-8 text-center font-bold text-[var(--text-primary)] text-sm tabular-nums">
+                              {qty}
+                            </span>
+                            <button
+                              onClick={() => updateQuantity(item, 1)}
+                              className="w-8 h-8 rounded-full bg-primary/15 text-primary hover:bg-primary/25 flex items-center justify-center font-bold text-lg transition-colors active:scale-90"
+                              title="Meer"
+                            >
+                              +
+                            </button>
+                          </div>
+                        )}
+
+                        {/* Show quantity for checked items */}
+                        {item.checked && qty > 1 && (
+                          <span className="text-sm font-medium text-[var(--text-muted)]">×{qty}</span>
                         )}
                       </div>
-
-                      {/* Item name */}
-                      <span
-                        className={`text-lg font-bold flex-1 ${
-                          item.checked
-                            ? 'line-through text-text-main/50'
-                            : 'text-text-main'
-                        }`}
-                      >
-                        {item.name}
-                      </span>
-
-                      {/* Quantity */}
-                      {item.quantity && (
-                        <span className="text-sm font-medium text-text-main/50">
-                          {item.quantity}
-                        </span>
-                      )}
-                    </button>
-                  ))}
+                    );
+                  })}
                 </div>
               </div>
             ))
@@ -188,9 +241,9 @@ export default function ShoppingPage() {
                 type="checkbox"
                 checked={showChecked}
                 onChange={(e) => setShowChecked(e.target.checked)}
-                className="w-5 h-5 rounded border-muted text-primary focus:ring-primary"
+                className="w-5 h-5 rounded border-[var(--border-color)] text-primary focus:ring-primary"
               />
-              <span className="text-text-main/60 font-medium">
+              <span className="text-[var(--text-secondary)] font-medium">
                 Toon afgevinkte items
               </span>
             </label>

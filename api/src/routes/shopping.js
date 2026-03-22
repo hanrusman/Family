@@ -72,7 +72,7 @@ router.post('/', (req, res) => {
     db.prepare(`
       INSERT INTO shopping_items (id, name, quantity, category, added_by, meal_plan_id)
       VALUES (?, ?, ?, ?, ?, ?)
-    `).run(id, name, quantity || null, category || 'overig', added_by || null, meal_plan_id || null);
+    `).run(id, name, quantity || '1', category || 'overig', added_by || null, meal_plan_id || null);
 
     const item = db.prepare('SELECT * FROM shopping_items WHERE id = ?').get(id);
     res.status(201).json(item);
@@ -101,7 +101,7 @@ router.post('/bulk', (req, res) => {
       for (const item of items) {
         if (item.name) {
           const id = uuidv4();
-          insert.run(id, item.name, item.quantity || null, item.category || 'overig', item.added_by || null);
+          insert.run(id, item.name, item.quantity || '1', item.category || 'overig', item.added_by || null);
           ids.push(id);
         }
       }
@@ -156,6 +156,35 @@ function toggleItem(req, res) {
   }
 }
 router.patch('/:id/toggle', toggleItem);
+
+// PATCH /api/shopping/:id - Update item (quantity, name, category)
+router.patch('/:id', (req, res) => {
+  try {
+    const db = getDb();
+    const item = db.prepare('SELECT * FROM shopping_items WHERE id = ?').get(req.params.id);
+    if (!item) {
+      return res.status(404).json({ error: 'Item niet gevonden' });
+    }
+
+    const { quantity, name, category } = req.body;
+    const updates = [];
+    const params = [];
+
+    if (quantity !== undefined) { updates.push('quantity = ?'); params.push(String(quantity)); }
+    if (name !== undefined) { updates.push('name = ?'); params.push(name); }
+    if (category !== undefined) { updates.push('category = ?'); params.push(category); }
+
+    if (updates.length > 0) {
+      params.push(req.params.id);
+      db.prepare(`UPDATE shopping_items SET ${updates.join(', ')} WHERE id = ?`).run(...params);
+    }
+
+    const updated = db.prepare('SELECT * FROM shopping_items WHERE id = ?').get(req.params.id);
+    res.json(updated);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
 
 // DELETE /api/shopping/:id
 router.delete('/:id', (req, res) => {
