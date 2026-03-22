@@ -105,6 +105,7 @@ export default function DailyForecast({ forecast, enabledModels }) {
   });
 
   const days = Array.from(dayMap.values()).slice(0, showDays);
+  if (days.length === 0) return null;
   const globalMin = Math.min(...days.map((d) => d.spreadMin));
   const globalMax = Math.max(...days.map((d) => d.spreadMax));
   const tempRange = globalMax - globalMin || 1;

@@ -49,6 +49,7 @@ function t1(v) {
 }
 
 function mode(values) {
+  if (values.length === 0) return 0;
   const counts = new Map();
   for (const v of values) counts.set(v, (counts.get(v) || 0) + 1);
   let best = values[0];

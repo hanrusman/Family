@@ -55,10 +55,13 @@ async function fetchAirQuality(lat, lon) {
     }
 
     // Find current hour's index
+    // Format current hour in Amsterdam timezone to match Open-Meteo's response format
     const now = new Date();
-    // Format as local time to match Open-Meteo's Europe/Amsterdam times
-    const pad = (n) => String(n).padStart(2, '0');
-    const currentHour = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}T${pad(now.getHours())}:00`;
+    const currentHour = new Intl.DateTimeFormat('sv-SE', {
+      timeZone: 'Europe/Amsterdam',
+      year: 'numeric', month: '2-digit', day: '2-digit',
+      hour: '2-digit', minute: '2-digit', hour12: false,
+    }).format(now).replace(' ', 'T');
 
     const idx = (data.hourly.time || []).findIndex((t) => t === currentHour);
     const i = idx >= 0 ? idx : 0;
