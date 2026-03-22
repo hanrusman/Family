@@ -68,8 +68,6 @@ export function AppProvider({ children }) {
     try {
       const settings = await api.get('/settings');
       dispatch({ type: 'SET_SETTINGS', payload: settings });
-      // Apply theme
-      document.documentElement.setAttribute('data-theme', settings.theme || 'dark');
     } catch (err) {
       if (!err.message?.includes('401')) {
         console.warn('Kan instellingen niet laden:', err.message);
@@ -80,9 +78,6 @@ export function AppProvider({ children }) {
   const updateSettings = useCallback(async (updates) => {
     const settings = await api.put('/settings', updates);
     dispatch({ type: 'SET_SETTINGS', payload: settings });
-    if (updates.theme) {
-      document.documentElement.setAttribute('data-theme', updates.theme);
-    }
   }, []);
 
   useEffect(() => {

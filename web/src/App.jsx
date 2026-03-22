@@ -9,8 +9,10 @@ import { useIdleMode } from './hooks/useIdleMode';
 const LoginPage = lazy(() => import('./pages/LoginPage'));
 const CalendarPage = lazy(() => import('./pages/CalendarPage'));
 const ChoresPage = lazy(() => import('./pages/ChoresPage'));
-const MealsPage = lazy(() => import('./pages/MealsPage'));
+const WeekMenuPage = lazy(() => import('./pages/WeekMenuPage'));
+const RecipeDetailPage = lazy(() => import('./pages/RecipeDetailPage'));
 const ShoppingPage = lazy(() => import('./pages/ShoppingPage'));
+const WeatherPage = lazy(() => import('./pages/WeatherPage'));
 const SettingsPage = lazy(() => import('./pages/SettingsPage'));
 
 function PageLoader() {
@@ -46,8 +48,10 @@ function AppRoutes() {
             <Route path="/" element={<CalendarPage />} />
             <Route path="/kalender" element={<CalendarPage />} />
             <Route path="/klusjes" element={<ChoresPage />} />
-            <Route path="/menu" element={<MealsPage />} />
+            <Route path="/menu" element={<WeekMenuPage />} />
+            <Route path="/recept/:dayId" element={<RecipeDetailPage />} />
             <Route path="/boodschappen" element={<ShoppingPage />} />
+            <Route path="/weer" element={<WeatherPage />} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </Suspense>
@@ -71,8 +75,10 @@ function AppRoutes() {
           <Route path="/" element={<CalendarPage />} />
           <Route path="/kalender" element={<CalendarPage />} />
           <Route path="/klusjes" element={<ChoresPage />} />
-          <Route path="/menu" element={<MealsPage />} />
+          <Route path="/menu" element={<WeekMenuPage />} />
+            <Route path="/recept/:dayId" element={<RecipeDetailPage />} />
           <Route path="/boodschappen" element={<ShoppingPage />} />
+          <Route path="/weer" element={<WeatherPage />} />
           <Route path="/instellingen" element={<SettingsPage />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>

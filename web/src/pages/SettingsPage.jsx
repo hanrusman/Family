@@ -314,24 +314,6 @@ export default function SettingsPage() {
           <h3>Weergave</h3>
 
           <div className="setting-row">
-            <label className="form-label">Thema</label>
-            <div className="flex gap-2">
-              <button
-                className={`btn btn-sm ${localSettings.theme === 'dark' ? 'btn-primary' : 'btn-secondary'}`}
-                onClick={() => saveSetting('theme', 'dark')}
-              >
-                Donker
-              </button>
-              <button
-                className={`btn btn-sm ${localSettings.theme === 'light' ? 'btn-primary' : 'btn-secondary'}`}
-                onClick={() => saveSetting('theme', 'light')}
-              >
-                Licht
-              </button>
-            </div>
-          </div>
-
-          <div className="setting-row">
             <label className="form-label">Standaardweergave</label>
             <select
               className="select"

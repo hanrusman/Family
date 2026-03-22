@@ -145,12 +145,80 @@ function createTables() {
       updated_at TEXT DEFAULT (datetime('now'))
     );
 
+    -- Weekmenu's
+    CREATE TABLE IF NOT EXISTS weekly_menus (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      week_number INTEGER NOT NULL,
+      year INTEGER NOT NULL,
+      status TEXT NOT NULL DEFAULT 'active' CHECK(status IN ('draft', 'active', 'archived')),
+      shopping_list TEXT,
+      snack_suggestions TEXT,
+      created_at TEXT DEFAULT (datetime('now')),
+      UNIQUE(week_number, year)
+    );
+
+    -- Weekmenu dagmenu's
+    CREATE TABLE IF NOT EXISTS menu_days (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      menu_id INTEGER NOT NULL,
+      day_of_week INTEGER NOT NULL,
+      day_name TEXT NOT NULL,
+      recipe_name TEXT NOT NULL,
+      recipe_data TEXT,
+      meal_type TEXT,
+      prep_time_minutes INTEGER,
+      cost_index TEXT DEFAULT '€',
+      status TEXT NOT NULL DEFAULT 'proposed' CHECK(status IN ('proposed', 'approved', 'completed')),
+      completed_at TEXT,
+      notes TEXT,
+      FOREIGN KEY (menu_id) REFERENCES weekly_menus(id) ON DELETE CASCADE
+    );
+
+    -- Weekmenu boodschappen
+    CREATE TABLE IF NOT EXISTS weekmenu_shopping_items (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      menu_id INTEGER NOT NULL,
+      product_group TEXT,
+      item_name TEXT NOT NULL,
+      quantity TEXT,
+      for_days TEXT,
+      is_perishable INTEGER DEFAULT 0,
+      checked INTEGER DEFAULT 0,
+      storage_tip TEXT,
+      FOREIGN KEY (menu_id) REFERENCES weekly_menus(id) ON DELETE CASCADE
+    );
+
+    -- Voorraadcheck
+    CREATE TABLE IF NOT EXISTS pantry_check (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      menu_id INTEGER NOT NULL,
+      item_name TEXT NOT NULL,
+      quantity TEXT,
+      needed_for_days TEXT,
+      should_have INTEGER DEFAULT 1,
+      have_it INTEGER DEFAULT 0,
+      FOREIGN KEY (menu_id) REFERENCES weekly_menus(id) ON DELETE CASCADE
+    );
+
+    -- Maaltijd feedback
+    CREATE TABLE IF NOT EXISTS day_feedback (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      day_id INTEGER NOT NULL UNIQUE,
+      rating TEXT CHECK(rating IN ('lekker', 'ok', 'minder')),
+      notes TEXT,
+      created_at TEXT DEFAULT (datetime('now')),
+      FOREIGN KEY (day_id) REFERENCES menu_days(id) ON DELETE CASCADE
+    );
+
     -- Indices
     CREATE INDEX IF NOT EXISTS idx_events_start ON events(start_time);
     CREATE INDEX IF NOT EXISTS idx_events_member ON events(member_id);
     CREATE INDEX IF NOT EXISTS idx_chore_instances_date ON chore_instances(date);
     CREATE INDEX IF NOT EXISTS idx_meal_plans_date ON meal_plans(date);
     CREATE INDEX IF NOT EXISTS idx_shopping_checked ON shopping_items(checked);
+    CREATE INDEX IF NOT EXISTS idx_menu_days_menu ON menu_days(menu_id);
+    CREATE INDEX IF NOT EXISTS idx_wmenu_shopping_menu ON weekmenu_shopping_items(menu_id);
+    CREATE INDEX IF NOT EXISTS idx_pantry_menu ON pantry_check(menu_id);
   `);
 }
 

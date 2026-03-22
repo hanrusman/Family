@@ -13,6 +13,11 @@ const familyRouter = require('./routes/family');
 const settingsRouter = require('./routes/settings');
 const calendarsRouter = require('./routes/calendars');
 const authRouter = require('./routes/auth');
+const weatherRouter = require('./routes/weather');
+const weekmenuRouter = require('./routes/weekmenu');
+const weekmenuShoppingRouter = require('./routes/weekmenu-shopping');
+const pantryRouter = require('./routes/pantry');
+const recipesRouter = require('./routes/recipes');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -28,6 +33,7 @@ app.use((req, res, next) => {
 
 // Public routes
 app.use('/api/auth', authRouter);
+app.use('/api/weather', weatherRouter);
 
 // Health check
 app.get('/api/health', (req, res) => {
@@ -67,6 +73,12 @@ app.use('/api/shopping', authMiddleware, shoppingRouter.router);
 app.use('/api/family', authMiddleware, familyRouter);
 app.use('/api/settings', authMiddleware, settingsRouter);
 app.use('/api/calendars', authMiddleware, calendarsRouter.router);
+
+// Weekmenu routes (public, auth handled per-route internally)
+app.use('/api/weekmenu', weekmenuRouter);
+app.use('/api/weekmenu', weekmenuShoppingRouter);
+app.use('/api/weekmenu', pantryRouter);
+app.use('/api/recipes', recipesRouter);
 
 // Serve frontend (production)
 const publicPath = path.join(__dirname, '..', 'public');
