@@ -26,7 +26,9 @@ const RecipeSchema = z.object({
 const DaySchema = z.object({
   day_name: z.string(),
   recipe_name: z.string(),
-  recipe_data: RecipeSchema.optional().default({}),
+  // Accept both 'recipe' (original weekmenu format) and 'recipe_data' (family format)
+  recipe: RecipeSchema.optional(),
+  recipe_data: RecipeSchema.optional(),
   meal_type: z.string().optional().default('dinner'),
   prep_time_minutes: z.number().optional().default(30),
   cost_index: z.string().optional().default('€€'),
@@ -119,12 +121,14 @@ function importMenu(jsonData, weekNumber, year) {
 
     for (let i = 0; i < parsed.days.length; i++) {
       const day = parsed.days[i];
+      // Accept both 'recipe' (original weekmenu) and 'recipe_data' (family format)
+      const recipeData = day.recipe || day.recipe_data || {};
       insertDay.run(
         menuId,
         i,
         day.day_name,
         day.recipe_name,
-        JSON.stringify(day.recipe_data || {}),
+        JSON.stringify(recipeData),
         day.meal_type || 'dinner',
         day.prep_time_minutes || 30,
         day.cost_index || '€€',
