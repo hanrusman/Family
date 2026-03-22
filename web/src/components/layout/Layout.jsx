@@ -33,7 +33,7 @@ export default function Layout({ children }) {
   const navItems = isTabletMode ? NAV_ITEMS : [...NAV_ITEMS, SETTINGS_ITEM];
 
   return (
-    <div className="min-h-screen bg-background-light font-display">
+    <div className="h-screen flex flex-col bg-background-light font-display">
       {/* Dark mode toggle - fixed top right */}
       <button
         onClick={() => setDark(!dark)}
@@ -44,7 +44,7 @@ export default function Layout({ children }) {
       </button>
 
       {/* Main content */}
-      <main className="pb-32">
+      <main className="flex-1 overflow-y-auto overflow-x-hidden pb-32" style={{ WebkitOverflowScrolling: 'touch' }}>
         {children}
       </main>
 
