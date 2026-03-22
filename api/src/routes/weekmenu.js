@@ -87,16 +87,21 @@ router.get('/days/:dayId', (req, res) => {
   res.json(day);
 });
 
-// POST /api/weekmenu/import - import menu JSON (admin only)
+// POST /api/weekmenu/import - import menu JSON (auth required)
 router.post('/import', authMiddleware, (req, res) => {
   try {
-    const { menu: menuData, weekNumber, year } = req.body || {};
+    const body = req.body || {};
 
-    if (!menuData) {
-      return res.status(400).json({ error: 'Menu JSON is vereist' });
+    // Accept both { days: [...] } (direct) and { menu: { days: [...] } } (wrapped)
+    const menuData = body.days ? body : body.menu;
+
+    if (!menuData || !menuData.days) {
+      return res.status(400).json({ error: 'Menu JSON met "days" array is vereist' });
     }
 
-    // Validate optional inputs
+    const weekNumber = body.weekNumber || body.week_number;
+    const year = body.year;
+
     if (weekNumber !== undefined && (!Number.isInteger(weekNumber) || weekNumber < 1 || weekNumber > 53)) {
       return res.status(400).json({ error: 'Weeknummer moet tussen 1 en 53 zijn' });
     }

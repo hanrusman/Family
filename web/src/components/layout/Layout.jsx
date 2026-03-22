@@ -56,11 +56,9 @@ export default function Layout({ children }) {
 
       {/* Bottom tab bar for phone/portrait */}
       <div className="layout-bottom-bar">
-        <div className="bottom-bar-toggle">
-          <DarkModeToggle />
-        </div>
         <nav className="nav-bar" role="navigation" aria-label="Hoofdnavigatie">
           {renderNavItems()}
+          <DarkModeToggle />
         </nav>
       </div>
     </div>

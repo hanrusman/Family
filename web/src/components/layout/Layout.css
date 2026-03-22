@@ -22,38 +22,31 @@
 /* Bottom bar visible by default */
 .layout-bottom-bar {
   flex-shrink: 0;
-  position: relative;
-}
-
-/* Dark mode toggle in bottom bar */
-.bottom-bar-toggle {
-  position: absolute;
-  top: -36px;
-  right: 8px;
-  z-index: 10;
 }
 
 /* === Dark mode toggle button === */
 .dark-mode-toggle {
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
-  width: 32px;
-  height: 32px;
+  gap: 0.125rem;
+  width: 40px;
+  min-height: 44px;
   border: none;
-  background: var(--bg-secondary);
-  border-radius: 50%;
-  font-size: 0.875rem;
+  background: transparent;
+  font-size: 1rem;
   cursor: pointer;
   transition: all var(--transition);
-  box-shadow: var(--shadow);
   touch-action: manipulation;
-  border: 1px solid var(--border-color);
+  color: var(--text-muted);
+  border-radius: var(--radius-sm);
+  padding: 0.375rem 0.25rem;
 }
 
 .dark-mode-toggle:hover {
   background: var(--bg-hover);
-  transform: scale(1.1);
+  color: var(--text-secondary);
 }
 
 /* Sidebar footer (dark mode toggle at bottom) */
