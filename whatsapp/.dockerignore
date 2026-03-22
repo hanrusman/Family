@@ -1,0 +1,25 @@
+# Dependencies (rebuilt in container)
+node_modules
+
+# Version control
+.git
+.gitignore
+
+# Development files
+*.md
+.env
+.env.*
+
+# Session data (mounted as volume)
+session/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+npm-debug.log*
+
+# Docker files
+Dockerfile

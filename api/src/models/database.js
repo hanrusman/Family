@@ -128,7 +128,7 @@ function createTables() {
     CREATE TABLE IF NOT EXISTS calendar_connections (
       id TEXT PRIMARY KEY,
       member_id TEXT NOT NULL,
-      provider TEXT NOT NULL CHECK(provider IN ('google', 'proton', 'caldav')),
+      provider TEXT NOT NULL CHECK(provider IN ('google', 'apple', 'proton', 'caldav')),
       name TEXT NOT NULL,
       credentials TEXT,
       sync_token TEXT,

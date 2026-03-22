@@ -2,6 +2,7 @@ const cron = require('node-cron');
 const { getDb } = require('../models/database');
 const { v4: uuidv4 } = require('uuid');
 const { logger } = require('./logger');
+const { syncAllConnections } = require('./caldav');
 
 function startScheduler() {
   // Generate daily chore instances at midnight
@@ -12,6 +13,11 @@ function startScheduler() {
   // Clean up old checked shopping items (older than 24h)
   cron.schedule('0 2 * * *', () => {
     cleanupShoppingItems();
+  });
+
+  // Sync all enabled CalDAV calendar connections every 5 minutes
+  cron.schedule('*/5 * * * *', () => {
+    syncCalendarConnections();
   });
 
   // Generate today's chores on startup
@@ -76,4 +82,15 @@ function cleanupShoppingItems() {
   }
 }
 
-module.exports = { startScheduler, generateDailyChores, cleanupShoppingItems };
+async function syncCalendarConnections() {
+  try {
+    const result = await syncAllConnections();
+    if (result.total > 0) {
+      logger.info(`Kalender sync: ${result.synced} events gesynchroniseerd uit ${result.total} connectie(s), ${result.errors} fouten`);
+    }
+  } catch (error) {
+    logger.error('Fout bij kalender sync:', error);
+  }
+}
+
+module.exports = { startScheduler, generateDailyChores, cleanupShoppingItems, syncCalendarConnections };

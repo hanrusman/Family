@@ -1,22 +1,33 @@
 import React, { useMemo } from 'react';
-import { toDateString, isToday, formatNL, timeString, addDays } from '../../utils/dateUtils';
+import { toDateString, isToday, formatNL, timeString } from '../../utils/dateUtils';
 import './CalendarViews.css';
 
-export default function AgendaView({ currentDate, events, onEventClick }) {
-  const groupedEvents = useMemo(() => {
-    const groups = {};
+export default function AgendaView({ currentDate, events, meals, chores, onEventClick }) {
+  const groupedDays = useMemo(() => {
+    // Collect all dates from events, meals, and chores
+    const dateSet = new Set();
     const sorted = [...events].sort((a, b) => a.start_time.localeCompare(b.start_time));
 
     for (const event of sorted) {
-      const dateStr = toDateString(event.start_time);
-      if (!groups[dateStr]) groups[dateStr] = [];
-      groups[dateStr].push(event);
+      dateSet.add(toDateString(event.start_time));
+    }
+    for (const meal of (meals || [])) {
+      dateSet.add(meal.date);
+    }
+    for (const chore of (chores || [])) {
+      dateSet.add(chore.date);
     }
 
-    return Object.entries(groups).sort(([a], [b]) => a.localeCompare(b));
-  }, [events]);
+    const dates = [...dateSet].sort();
+    return dates.map((dateStr) => ({
+      dateStr,
+      events: sorted.filter((e) => toDateString(e.start_time) === dateStr),
+      meals: (meals || []).filter((m) => m.date === dateStr),
+      chores: (chores || []).filter((c) => c.date === dateStr),
+    }));
+  }, [events, meals, chores]);
 
-  if (groupedEvents.length === 0) {
+  if (groupedDays.length === 0) {
     return (
       <div className="agenda-empty">
         <p className="text-secondary">Geen events in de komende 2 weken</p>
@@ -26,15 +37,30 @@ export default function AgendaView({ currentDate, events, onEventClick }) {
 
   return (
     <div className="agenda-view">
-      {groupedEvents.map(([dateStr, dayEvents]) => {
+      {groupedDays.map(({ dateStr, events: dayEvents, meals: dayMeals, chores: dayChores }) => {
         const date = new Date(dateStr);
         const today = isToday(date);
+        const dinner = dayMeals.find((m) => m.meal_type === 'dinner');
+        const choresDone = dayChores.filter((c) => c.completed).length;
+        const choresTotal = dayChores.length;
 
         return (
           <div key={dateStr} className="agenda-group">
             <div className={`agenda-date ${today ? 'agenda-date-today' : ''}`}>
               <span className="agenda-day-name">{formatNL(date, 'EEEE')}</span>
               <span className="agenda-day-number">{formatNL(date, 'd MMMM')}</span>
+              <div className="agenda-date-meta">
+                {choresTotal > 0 && (
+                  <span className={`agenda-meta-badge ${choresDone === choresTotal ? 'chores-complete' : ''}`}>
+                    {choresDone}/{choresTotal} klusjes
+                  </span>
+                )}
+                {dinner && (
+                  <span className="agenda-meta-badge agenda-meta-meal">
+                    🍽 {dinner.title}
+                  </span>
+                )}
+              </div>
             </div>
 
             <div className="agenda-events">

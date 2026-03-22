@@ -1,0 +1,37 @@
+# Version control
+.git
+.gitignore
+
+# Dependencies (rebuilt in container)
+node_modules
+web/node_modules
+api/node_modules
+whatsapp/node_modules
+
+# Build artifacts
+web/dist
+
+# Development files
+.env
+.env.*
+*.md
+LICENSE
+.vscode
+.idea
+.claude
+
+# Docker files (not needed in context)
+docker-compose.yml
+docker-compose*.yml
+Dockerfile
+
+# Data and sessions (mounted as volumes)
+data/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+npm-debug.log*

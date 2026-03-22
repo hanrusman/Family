@@ -2,7 +2,7 @@ import React, { useMemo } from 'react';
 import { getWeekDays, toDateString, isToday, formatNL, timeString } from '../../utils/dateUtils';
 import './CalendarViews.css';
 
-export default function WeekView({ currentDate, events, onDayClick, onEventClick }) {
+export default function WeekView({ currentDate, events, meals, chores, onDayClick, onEventClick }) {
   const days = useMemo(() => getWeekDays(currentDate), [currentDate]);
 
   const eventsByDay = useMemo(() => {
@@ -25,6 +25,11 @@ export default function WeekView({ currentDate, events, onDayClick, onEventClick
           const dateStr = toDateString(day);
           const dayEvents = eventsByDay[dateStr] || [];
           const today = isToday(day);
+          const dayMeals = meals?.filter((m) => m.date === dateStr) || [];
+          const dinner = dayMeals.find((m) => m.meal_type === 'dinner');
+          const dayChores = chores?.filter((c) => c.date === dateStr) || [];
+          const choresDone = dayChores.filter((c) => c.completed).length;
+          const choresTotal = dayChores.length;
 
           return (
             <div
@@ -40,7 +45,7 @@ export default function WeekView({ currentDate, events, onDayClick, onEventClick
               </div>
 
               <div className="week-day-events">
-                {dayEvents.slice(0, 5).map((event) => (
+                {dayEvents.slice(0, 4).map((event) => (
                   <div
                     key={event.id}
                     className="week-event"
@@ -56,8 +61,22 @@ export default function WeekView({ currentDate, events, onDayClick, onEventClick
                     <span className="week-event-title">{event.title}</span>
                   </div>
                 ))}
-                {dayEvents.length > 5 && (
-                  <div className="week-event-more">+{dayEvents.length - 5} meer</div>
+                {dayEvents.length > 4 && (
+                  <div className="week-event-more">+{dayEvents.length - 4} meer</div>
+                )}
+              </div>
+
+              {/* Chores + dinner summary */}
+              <div className="week-day-footer">
+                {choresTotal > 0 && (
+                  <span className={`week-chores-badge ${choresDone === choresTotal ? 'chores-complete' : ''}`}>
+                    {choresDone === choresTotal ? '✓' : `${choresDone}/${choresTotal}`}
+                  </span>
+                )}
+                {dinner && (
+                  <span className="week-dinner-badge" title={dinner.title}>
+                    🍽
+                  </span>
                 )}
               </div>
             </div>

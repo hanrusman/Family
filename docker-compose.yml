@@ -3,13 +3,14 @@ services:
     build: .
     container_name: family
     restart: unless-stopped
+    read_only: true
     security_opt:
       - no-new-privileges:true
     cap_drop:
       - ALL
     user: "1000:1000"
     tmpfs:
-      - /tmp:rw,noexec,nosuid
+      - /tmp:rw,noexec,nosuid,size=64M
     volumes:
       - ./data:/app/data:rw
     environment:
@@ -49,13 +50,16 @@ services:
     build: ./whatsapp
     container_name: family-whatsapp
     restart: unless-stopped
+    read_only: true
     security_opt:
       - no-new-privileges:true
     cap_drop:
       - ALL
     user: "1000:1000"
     tmpfs:
-      - /tmp:rw,noexec,nosuid
+      - /tmp:rw,noexec,nosuid,size=64M
+      - /app/.wwebjs_auth:rw,noexec,nosuid,size=128M
+      - /app/.wwebjs_cache:rw,noexec,nosuid,size=256M
     depends_on:
       family:
         condition: service_healthy
@@ -68,6 +72,12 @@ services:
       - ALLOWED_NUMBERS=${FAMILY_ALLOWED_NUMBERS}
     networks:
       - family-internal
+    healthcheck:
+      test: ["CMD", "node", "-e", "try { require('fs').accessSync('/app/src/index.js'); process.exit(0); } catch(e) { process.exit(1); }"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 120s
     deploy:
       resources:
         limits:

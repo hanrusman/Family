@@ -30,6 +30,32 @@
   text-transform: capitalize;
 }
 
+.idle-next-event {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  margin-top: 2rem;
+  color: rgba(255, 255, 255, 0.4);
+  font-size: 1.125rem;
+}
+
+.idle-event-time {
+  font-variant-numeric: tabular-nums;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.idle-event-title {
+  font-weight: 400;
+}
+
+.idle-dinner {
+  margin-top: 2rem;
+  color: rgba(255, 255, 255, 0.35);
+  font-size: 1rem;
+}
+
 .idle-hint {
   position: absolute;
   bottom: 2rem;
@@ -48,5 +74,9 @@
   }
   .idle-date {
     font-size: 1.25rem;
+  }
+  .idle-next-event {
+    font-size: 0.9375rem;
+    margin-top: 1.5rem;
   }
 }

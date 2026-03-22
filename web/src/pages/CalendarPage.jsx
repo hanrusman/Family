@@ -25,6 +25,8 @@ export default function CalendarPage() {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [view, setView] = useState(settings.default_view || 'week');
   const [events, setEvents] = useState([]);
+  const [meals, setMeals] = useState([]);
+  const [chores, setChores] = useState([]);
   const [error, setError] = useState(null);
   const [showModal, setShowModal] = useState(false);
   const [editingEvent, setEditingEvent] = useState(null);
@@ -60,7 +62,22 @@ export default function CalendarPage() {
     }
   }, [dateRange, isTabletMode]);
 
+  const fetchMealsAndChores = useCallback(async () => {
+    try {
+      const fetcher = isTabletMode ? tabletApi : api;
+      const [mealsData, choresData] = await Promise.all([
+        fetcher.get(`/meals?start=${dateRange.start}&end=${dateRange.end}`).catch(() => []),
+        fetcher.get(`/chores?date=${dateRange.start}`).catch(() => []),
+      ]);
+      setMeals(Array.isArray(mealsData) ? mealsData : []);
+      setChores(Array.isArray(choresData) ? choresData : []);
+    } catch {
+      // Non-critical: calendar still works without meals/chores
+    }
+  }, [dateRange, isTabletMode]);
+
   usePolling(fetchEvents, 60000, [dateRange.start, dateRange.end]);
+  usePolling(fetchMealsAndChores, 120000, [dateRange.start, dateRange.end]);
 
   const navigate = (direction) => {
     const ops = { day: [addDays, subDays, 1], week: [addWeeks, subWeeks, 1], month: [addMonths, subMonths, 1], agenda: [addDays, subDays, 7] };
@@ -116,6 +133,8 @@ export default function CalendarPage() {
   const viewProps = {
     currentDate,
     events,
+    meals,
+    chores,
     onDayClick: handleDayClick,
     onEventClick: (e) => { setEditingEvent(e); setShowModal(true); },
     settings,

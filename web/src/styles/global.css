@@ -95,7 +95,7 @@ h3 { font-size: 1.25rem; font-weight: 600; }
 }
 
 /* Prevent text selection on interactive elements, but allow on inputs */
-.btn, .tab-item, .chore-item, .shopping-item, .tab-bar, .calendar-nav {
+.btn, .nav-item, .chore-item, .shopping-item, .nav-bar, .calendar-nav {
   user-select: none;
   -webkit-user-select: none;
 }
@@ -277,10 +277,4 @@ h3 { font-size: 1.25rem; font-weight: 600; }
   html { font-size: 20px; }
 }
 
-/* Tablet landscape */
-@media (min-width: 1024px) and (orientation: landscape) {
-  .tablet-sidebar {
-    display: flex;
-    flex-direction: row;
-  }
-}
+/* Tablet landscape handled in Layout.css */

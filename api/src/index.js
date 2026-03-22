@@ -11,6 +11,7 @@ const mealsRouter = require('./routes/meals');
 const shoppingRouter = require('./routes/shopping');
 const familyRouter = require('./routes/family');
 const settingsRouter = require('./routes/settings');
+const calendarsRouter = require('./routes/calendars');
 const authRouter = require('./routes/auth');
 
 const app = express();
@@ -65,6 +66,7 @@ app.use('/api/meals', authMiddleware, mealsRouter.router);
 app.use('/api/shopping', authMiddleware, shoppingRouter.router);
 app.use('/api/family', authMiddleware, familyRouter);
 app.use('/api/settings', authMiddleware, settingsRouter);
+app.use('/api/calendars', authMiddleware, calendarsRouter.router);
 
 // Serve frontend (production)
 const publicPath = path.join(__dirname, '..', 'public');

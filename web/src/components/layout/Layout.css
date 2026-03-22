@@ -1,3 +1,4 @@
+/* === Layout: mobile-first bottom bar, tablet landscape sidebar === */
 .layout {
   display: flex;
   flex-direction: column;
@@ -13,8 +14,18 @@
   -webkit-overflow-scrolling: touch;
 }
 
-/* Tab Bar */
-.tab-bar {
+/* Sidebar hidden by default (phone/portrait) */
+.layout-sidebar {
+  display: none;
+}
+
+/* Bottom bar visible by default */
+.layout-bottom-bar {
+  flex-shrink: 0;
+}
+
+/* === Nav bar shared styles === */
+.nav-bar {
   display: flex;
   align-items: center;
   justify-content: space-around;
@@ -22,10 +33,9 @@
   border-top: 1px solid var(--border-color);
   padding: 0.25rem 0;
   padding-bottom: env(safe-area-inset-bottom, 0.25rem);
-  flex-shrink: 0;
 }
 
-.tab-item {
+.nav-item {
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -42,40 +52,105 @@
   touch-action: manipulation;
 }
 
-.tab-item:hover {
+.nav-item:hover {
   color: var(--text-secondary);
   background: var(--bg-hover);
 }
 
-.tab-active {
+.nav-active {
   color: var(--accent);
 }
 
-.tab-active:hover {
+.nav-active:hover {
   color: var(--accent);
 }
 
-.tab-icon {
+.nav-icon {
   font-size: 1.25rem;
   line-height: 1;
 }
 
-.tab-label {
+.nav-label {
   font-size: 0.625rem;
   font-weight: 500;
   text-transform: uppercase;
   letter-spacing: 0.5px;
 }
 
-/* Desktop/Tablet landscape: bottom bar stays */
+/* === Tablet landscape: sidebar layout === */
 @media (min-width: 1024px) and (orientation: landscape) {
-  .tab-item {
+  .layout {
     flex-direction: row;
-    gap: 0.5rem;
-    padding: 0.5rem 1rem;
   }
 
-  .tab-label {
-    font-size: 0.75rem;
+  /* Show sidebar */
+  .layout-sidebar {
+    display: flex;
+    flex-shrink: 0;
+    width: 80px;
+    border-right: 1px solid var(--border-color);
+    background: var(--bg-secondary);
+  }
+
+  .layout-sidebar .nav-bar {
+    flex-direction: column;
+    justify-content: flex-start;
+    gap: 0.25rem;
+    padding: 1rem 0.5rem;
+    border-top: none;
+    width: 100%;
+    height: 100%;
+  }
+
+  .layout-sidebar .nav-item {
+    width: 100%;
+    min-height: 56px;
+    padding: 0.5rem;
+    border-radius: var(--radius);
+  }
+
+  .layout-sidebar .nav-active {
+    background: var(--accent-light);
+  }
+
+  .layout-sidebar .nav-icon {
+    font-size: 1.5rem;
+  }
+
+  .layout-sidebar .nav-label {
+    font-size: 0.5625rem;
+  }
+
+  /* Hide bottom bar in landscape */
+  .layout-bottom-bar {
+    display: none;
+  }
+}
+
+/* === Wider tablet landscape: labels visible === */
+@media (min-width: 1200px) and (orientation: landscape) {
+  .layout-sidebar {
+    width: 100px;
+  }
+
+  .layout-sidebar .nav-label {
+    font-size: 0.625rem;
+  }
+}
+
+/* === Phone: compact bottom bar === */
+@media (max-width: 600px) {
+  .nav-item {
+    padding: 0.375rem 0.5rem;
+    min-width: 48px;
+    min-height: 44px;
+  }
+
+  .nav-icon {
+    font-size: 1.125rem;
+  }
+
+  .nav-label {
+    font-size: 0.5625rem;
   }
 }

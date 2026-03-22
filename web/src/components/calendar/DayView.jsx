@@ -2,7 +2,7 @@ import React, { useMemo } from 'react';
 import { getTimePosition, getEventHeight, timeString, toDateString } from '../../utils/dateUtils';
 import './CalendarViews.css';
 
-export default function DayView({ currentDate, events, onEventClick, settings }) {
+export default function DayView({ currentDate, events, meals, chores, onEventClick, settings }) {
   const dayStartHour = parseInt(settings.day_start_hour) || 6;
   const dayEndHour = parseInt(settings.day_end_hour) || 22;
 
@@ -26,8 +26,29 @@ export default function DayView({ currentDate, events, onEventClick, settings })
   const allDayEvents = dayEvents.filter((e) => e.all_day);
   const timedEvents = dayEvents.filter((e) => !e.all_day);
 
+  const dayMeals = meals?.filter((m) => m.date === dateStr) || [];
+  const dayChores = chores?.filter((c) => c.date === dateStr) || [];
+
   return (
     <div className="day-view">
+      {/* Context bar: meals + chores of the day */}
+      {(dayMeals.length > 0 || dayChores.length > 0) && (
+        <div className="day-context-bar">
+          {dayMeals.map((meal) => (
+            <div key={meal.id || `${meal.date}-${meal.meal_type}`} className="day-context-chip day-context-meal">
+              <span>{meal.meal_type === 'breakfast' ? '🌅' : meal.meal_type === 'lunch' ? '🥪' : '🍽️'}</span>
+              <span>{meal.title}</span>
+            </div>
+          ))}
+          {dayChores.length > 0 && (
+            <div className="day-context-chip day-context-chores">
+              <span>✅</span>
+              <span>{dayChores.filter((c) => c.completed).length}/{dayChores.length} klusjes</span>
+            </div>
+          )}
+        </div>
+      )}
+
       {allDayEvents.length > 0 && (
         <div className="all-day-bar">
           {allDayEvents.map((event) => (

@@ -5,16 +5,42 @@ import './SettingsPage.css';
 
 const COLORS = ['#3B82F6', '#EF4444', '#22C55E', '#F59E0B', '#8B5CF6', '#EC4899', '#06B6D4', '#F97316'];
 
+const PROVIDER_INFO = {
+  google: { label: 'Google Calendar', url: 'https://www.googleapis.com/caldav/v2/' },
+  apple: { label: 'Apple Calendar', url: 'https://caldav.icloud.com/' },
+  proton: { label: 'Proton Calendar', url: 'http://localhost:1080/' },
+  caldav: { label: 'CalDAV (generiek)', url: '' },
+};
+
 export default function SettingsPage() {
   const { settings, updateSettings, loadFamily, familyMembers, logout } = useApp();
   const [members, setMembers] = useState([]);
   const [newMember, setNewMember] = useState({ name: '', role: 'child', color: '#3B82F6' });
   const [localSettings, setLocalSettings] = useState(settings || {});
+  const [calendars, setCalendars] = useState([]);
+  const [showCalendarForm, setShowCalendarForm] = useState(false);
+  const [calendarForm, setCalendarForm] = useState({
+    provider: 'google', name: '', caldav_url: '', username: '', password: '', member_id: '',
+  });
+  const [syncStatus, setSyncStatus] = useState({});
 
   useEffect(() => {
     setMembers(familyMembers);
     setLocalSettings(settings);
   }, [familyMembers, settings]);
+
+  useEffect(() => {
+    loadCalendars();
+  }, []);
+
+  const loadCalendars = async () => {
+    try {
+      const data = await api.get('/calendars');
+      setCalendars(data);
+    } catch {
+      // Calendar endpoints may not exist yet
+    }
+  };
 
   const saveSetting = async (key, value) => {
     setLocalSettings((s) => ({ ...s, [key]: value }));
@@ -43,6 +69,48 @@ export default function SettingsPage() {
       loadFamily();
     } catch (err) {
       alert(err.message);
+    }
+  };
+
+  const addCalendar = async () => {
+    const form = {
+      ...calendarForm,
+      caldav_url: calendarForm.caldav_url || PROVIDER_INFO[calendarForm.provider]?.url || '',
+    };
+    if (!form.name || !form.caldav_url || !form.username || !form.password || !form.member_id) {
+      alert('Vul alle velden in');
+      return;
+    }
+    try {
+      await api.post('/calendars', form);
+      setShowCalendarForm(false);
+      setCalendarForm({ provider: 'google', name: '', caldav_url: '', username: '', password: '', member_id: '' });
+      loadCalendars();
+    } catch (err) {
+      alert(err.message);
+    }
+  };
+
+  const deleteCalendar = async (id) => {
+    if (!confirm('Kalender verwijderen? Alle gesynchroniseerde events worden ook verwijderd.')) return;
+    try {
+      await api.delete(`/calendars/${id}`);
+      loadCalendars();
+    } catch (err) {
+      alert(err.message);
+    }
+  };
+
+  const syncCalendar = async (id) => {
+    setSyncStatus((s) => ({ ...s, [id]: 'syncing' }));
+    try {
+      await api.post(`/calendars/${id}/sync`);
+      setSyncStatus((s) => ({ ...s, [id]: 'done' }));
+      loadCalendars();
+      setTimeout(() => setSyncStatus((s) => ({ ...s, [id]: null })), 3000);
+    } catch (err) {
+      setSyncStatus((s) => ({ ...s, [id]: 'error' }));
+      alert(`Sync mislukt: ${err.message}`);
     }
   };
 
@@ -96,6 +164,148 @@ export default function SettingsPage() {
               </div>
               <button className="btn btn-primary btn-sm w-full" onClick={addMember}>Toevoegen</button>
             </div>
+          </div>
+        </section>
+
+        {/* Kalender Koppelingen */}
+        <section className="settings-section">
+          <h3>Kalender Koppelingen</h3>
+          <p className="text-sm text-secondary mb-2">
+            Koppel externe agenda's via CalDAV (Google, Apple, Proton).
+          </p>
+
+          <div className="calendars-list">
+            {calendars.map((cal) => (
+              <div key={cal.id} className="calendar-connection card">
+                <div className="calendar-connection-info">
+                  <span className="font-medium">{cal.name}</span>
+                  <span className="text-muted text-sm">
+                    {PROVIDER_INFO[cal.provider]?.label || cal.provider}
+                    {cal.member_name && ` — ${cal.member_name}`}
+                  </span>
+                  {cal.last_sync && (
+                    <span className="text-xs text-muted">
+                      Laatst gesynchroniseerd: {new Date(cal.last_sync).toLocaleString('nl-NL')}
+                    </span>
+                  )}
+                </div>
+                <div className="calendar-connection-actions">
+                  <button
+                    className={`btn btn-sm ${syncStatus[cal.id] === 'syncing' ? 'btn-secondary' : 'btn-ghost'}`}
+                    onClick={() => syncCalendar(cal.id)}
+                    disabled={syncStatus[cal.id] === 'syncing'}
+                  >
+                    {syncStatus[cal.id] === 'syncing' ? 'Bezig...' : syncStatus[cal.id] === 'done' ? '✓' : 'Sync'}
+                  </button>
+                  <button className="btn btn-ghost btn-sm" onClick={() => deleteCalendar(cal.id)}>✕</button>
+                </div>
+              </div>
+            ))}
+
+            {!showCalendarForm ? (
+              <button className="btn btn-secondary btn-sm" onClick={() => setShowCalendarForm(true)}>
+                + Kalender toevoegen
+              </button>
+            ) : (
+              <div className="calendar-add-form card">
+                <div className="form-group">
+                  <label className="form-label">Provider</label>
+                  <select
+                    className="select"
+                    value={calendarForm.provider}
+                    onChange={(e) => {
+                      const provider = e.target.value;
+                      setCalendarForm((f) => ({
+                        ...f,
+                        provider,
+                        caldav_url: PROVIDER_INFO[provider]?.url || '',
+                      }));
+                    }}
+                  >
+                    <option value="google">Google Calendar</option>
+                    <option value="apple">Apple Calendar (iCloud)</option>
+                    <option value="proton">Proton Calendar</option>
+                    <option value="caldav">CalDAV (generiek)</option>
+                  </select>
+                </div>
+
+                <div className="form-group">
+                  <label className="form-label">Naam</label>
+                  <input
+                    className="input"
+                    placeholder="Bijv. 'Werk' of 'Persoonlijk'"
+                    value={calendarForm.name}
+                    onChange={(e) => setCalendarForm((f) => ({ ...f, name: e.target.value }))}
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label className="form-label">Gezinslid</label>
+                  <select
+                    className="select"
+                    value={calendarForm.member_id}
+                    onChange={(e) => setCalendarForm((f) => ({ ...f, member_id: e.target.value }))}
+                  >
+                    <option value="">Kies gezinslid...</option>
+                    {members.map((m) => (
+                      <option key={m.id} value={m.id}>{m.name}</option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="form-group">
+                  <label className="form-label">CalDAV URL</label>
+                  <input
+                    className="input"
+                    placeholder={PROVIDER_INFO[calendarForm.provider]?.url || 'https://...'}
+                    value={calendarForm.caldav_url}
+                    onChange={(e) => setCalendarForm((f) => ({ ...f, caldav_url: e.target.value }))}
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label className="form-label">Gebruikersnaam</label>
+                  <input
+                    className="input"
+                    placeholder="E-mailadres of gebruikersnaam"
+                    value={calendarForm.username}
+                    onChange={(e) => setCalendarForm((f) => ({ ...f, username: e.target.value }))}
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label className="form-label">Wachtwoord / App-wachtwoord</label>
+                  <input
+                    className="input"
+                    type="password"
+                    placeholder="App-specifiek wachtwoord"
+                    value={calendarForm.password}
+                    onChange={(e) => setCalendarForm((f) => ({ ...f, password: e.target.value }))}
+                  />
+                </div>
+
+                {calendarForm.provider === 'google' && (
+                  <p className="text-xs text-muted">
+                    Gebruik een <strong>app-wachtwoord</strong> van Google (ga naar myaccount.google.com → Beveiliging → App-wachtwoorden).
+                  </p>
+                )}
+                {calendarForm.provider === 'apple' && (
+                  <p className="text-xs text-muted">
+                    Gebruik een <strong>app-specifiek wachtwoord</strong> (ga naar appleid.apple.com → App-wachtwoorden).
+                  </p>
+                )}
+                {calendarForm.provider === 'proton' && (
+                  <p className="text-xs text-muted">
+                    Proton Calendar vereist <strong>Proton Bridge</strong> voor CalDAV. Zorg dat Bridge draait en gebruik de Bridge-credentials.
+                  </p>
+                )}
+
+                <div className="flex gap-2">
+                  <button className="btn btn-primary btn-sm" onClick={addCalendar}>Opslaan</button>
+                  <button className="btn btn-secondary btn-sm" onClick={() => setShowCalendarForm(false)}>Annuleren</button>
+                </div>
+              </div>
+            )}
           </div>
         </section>
 
