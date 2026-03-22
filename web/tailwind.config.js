@@ -8,22 +8,16 @@ export default {
   theme: {
     extend: {
       colors: {
-        cream: {
-          50: '#FEFCF8',
-          100: '#FDF8EE',
-          200: '#F9EDDA',
-        },
-        forest: {
-          500: '#2D5A3D',
-          600: '#1E4D2B',
-          700: '#153D20',
-          800: '#0D2E16',
-        },
-        warmth: {
-          400: '#E8935A',
-          500: '#D97B3D',
-          600: '#C4682E',
-        },
+        'primary': '#f39e58',
+        'background-light': '#FDFBF7',
+        'background-dark': '#221810',
+        'surface': '#FFFFFF',
+        'text-main': '#264653',
+        'muted': '#E9ECEF',
+        'success': '#A7C957',
+        'accent-teal': '#2A9D8F',
+        'accent-alert': '#E76F51',
+        // Keep weather model colors
         model: {
           knmi: '#FF6B00',
           ecmwf: '#2563EB',
@@ -33,7 +27,16 @@ export default {
         },
       },
       fontFamily: {
-        sans: ['-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'Helvetica Neue', 'sans-serif'],
+        'display': ['Spline Sans', 'system-ui', '-apple-system', 'sans-serif'],
+      },
+      borderRadius: {
+        'DEFAULT': '1rem',
+        'lg': '1.5rem',
+        'xl': '2rem',
+        'full': '9999px',
+      },
+      boxShadow: {
+        'soft': '0 8px 32px rgba(38, 70, 83, 0.08)',
       },
     },
   },

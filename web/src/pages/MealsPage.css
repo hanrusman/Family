@@ -1,137 +1,327 @@
+/* =============================================
+   MealsPage — Accordion-style weekly dinner menu
+   ============================================= */
+
 .meals-page {
   display: flex;
   flex-direction: column;
   height: 100%;
+  overflow: hidden;
 }
 
-.meals-header {
+/* ---------- Header ---------- */
+
+.meals-header-new {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 1rem;
+  padding: 1.25rem 1.5rem;
   border-bottom: 1px solid var(--border-color);
   background: var(--bg-secondary);
 }
 
-.today-meal {
+.meals-header-left {
   display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  padding: 1rem 1.25rem;
-  background: var(--accent-light);
-  border-bottom: 1px solid var(--border-color);
+  flex-direction: column;
+  gap: 0.125rem;
 }
 
-.today-meal-label {
-  font-size: 0.9375rem;
+.meals-title {
+  font-size: 1.375rem;
+  font-weight: 700;
+  margin: 0;
+}
+
+.meals-subtitle {
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+  margin: 0;
+}
+
+.meals-week-badge {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  background: var(--bg-card, var(--bg-primary));
+  padding: 0.5rem 1rem;
+  border-radius: 9999px;
+  white-space: nowrap;
+}
+
+/* ---------- Accordion container ---------- */
+
+.meals-accordion {
+  flex: 1;
+  overflow-y: auto;
+  padding: 1rem 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.625rem;
+}
+
+/* ---------- Card (single day) ---------- */
+
+.meals-card {
+  border-radius: 1rem;
+  overflow: hidden;
+  transition: box-shadow 0.2s ease;
+}
+
+.meals-card-today {
+  border: 2px solid rgba(var(--accent-rgb, 59, 130, 246), 0.2);
+  background: rgba(var(--accent-rgb, 59, 130, 246), 0.06);
+  box-shadow: 0 0 0 1px rgba(var(--accent-rgb, 59, 130, 246), 0.08);
+}
+
+.meals-card-default {
+  border: 1px solid var(--border-color);
+  background: var(--bg-card, var(--bg-primary));
+}
+
+/* ---------- Card header (clickable row) ---------- */
+
+.meals-card-header {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  width: 100%;
+  padding: 0.75rem 1rem;
+  background: none;
+  border: none;
+  cursor: pointer;
+  text-align: left;
+  font: inherit;
+  color: inherit;
+  transition: background 0.15s ease;
+}
+
+.meals-card-header:hover {
+  background: rgba(var(--accent-rgb, 59, 130, 246), 0.04);
+}
+
+/* ---------- Day badge ---------- */
+
+.meals-day-badge {
+  flex-shrink: 0;
+  width: 5rem;
+  height: 5rem;
+  border-radius: 1rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.125rem;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+}
+
+.meals-day-badge-today {
+  background: rgba(var(--accent-rgb, 59, 130, 246), 0.15);
+  border-color: rgba(var(--accent-rgb, 59, 130, 246), 0.3);
+}
+
+.meals-day-badge-emoji {
+  font-size: 1.375rem;
+  line-height: 1;
+}
+
+.meals-day-badge-label {
+  font-size: 0.6875rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
   color: var(--text-secondary);
 }
 
-.today-meal-title {
-  font-size: 1.25rem;
-  font-weight: 700;
-  color: var(--accent);
+.meals-day-badge-date {
+  font-size: 0.625rem;
+  color: var(--text-muted);
 }
 
-.meals-content {
+/* ---------- Card info (title + subtitle) ---------- */
+
+.meals-card-info {
   flex: 1;
-  overflow-y: auto;
-  padding: 1rem;
-}
-
-.meals-grid {
+  min-width: 0;
   display: flex;
   flex-direction: column;
-  gap: 0;
+  gap: 0.125rem;
 }
 
-.meals-grid-header {
-  display: grid;
-  grid-template-columns: 80px repeat(3, 1fr);
-  gap: 0.5rem;
-  padding: 0.5rem 0;
-  border-bottom: 1px solid var(--border-color);
+.meals-card-title {
+  font-size: 1.0625rem;
+  font-weight: 700;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
-.meals-type-col {
-  font-size: 0.75rem;
-  text-transform: uppercase;
-  font-weight: 600;
-  color: var(--text-muted);
-  letter-spacing: 0.5px;
-  text-align: center;
+.meals-card-subtitle {
+  font-size: 0.8125rem;
+  color: var(--text-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
-.meals-row {
-  display: grid;
-  grid-template-columns: 80px repeat(3, 1fr);
-  gap: 0.5rem;
-  padding: 0.5rem 0;
-  border-bottom: 1px solid var(--border-color);
-  align-items: center;
-}
-
-.meals-row-today {
-  background: var(--accent-light);
-  border-radius: var(--radius-sm);
-  margin: 0 -0.5rem;
-  padding: 0.5rem;
-}
-
-.meals-day-col {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-.meals-day-name {
-  font-size: 0.75rem;
-  font-weight: 600;
-  color: var(--text-muted);
-}
-
-.meals-day-number {
-  font-weight: 600;
+.meals-card-empty {
   font-size: 0.875rem;
+  color: var(--text-muted);
+  font-style: italic;
 }
 
-.meals-cell {
-  padding: 0.5rem;
-  border-radius: var(--radius-sm);
-  min-height: 44px;
-  display: flex;
+/* ---------- Cook badge ---------- */
+
+.meals-cook-badge {
+  flex-shrink: 0;
+  display: inline-flex;
   align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  transition: all var(--transition);
-  border: 1px dashed var(--border-color);
+  gap: 0.375rem;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 9999px;
+  padding: 0.25rem 0.75rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  white-space: nowrap;
 }
 
-.meals-cell:hover {
-  background: var(--bg-hover);
+/* ---------- Expand arrow ---------- */
+
+.meals-expand-arrow {
+  flex-shrink: 0;
+  font-size: 0.875rem;
+  color: var(--text-muted);
+  transition: transform 0.25s ease;
+  transform: rotate(90deg);
 }
 
-.meals-cell-filled {
-  background: var(--bg-card);
-  border-style: solid;
+.meals-expand-arrow-open {
+  transform: rotate(270deg);
 }
 
-.meal-title {
+/* ---------- Card body (expandable) ---------- */
+
+.meals-card-body {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.3s ease, opacity 0.25s ease;
+  opacity: 0;
+}
+
+.meals-card-body-open {
+  max-height: 300px;
+  opacity: 1;
+}
+
+.meals-card-body-inner {
+  padding: 0 1rem 1rem 1rem;
+  margin-left: 6rem; /* align with content after day badge */
+}
+
+/* ---------- Expanded details ---------- */
+
+.meals-card-details {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.meals-card-notes {
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+  line-height: 1.5;
+  margin: 0;
+}
+
+.meals-card-notes-empty {
+  font-style: italic;
+  color: var(--text-muted);
+}
+
+.meals-prep-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 0.5rem;
+  padding: 0.375rem 0.75rem;
   font-size: 0.8125rem;
   font-weight: 500;
-  text-align: center;
+  color: var(--text-secondary);
+  width: fit-content;
 }
 
-.meal-add {
-  font-size: 1.25rem;
-  color: var(--text-muted);
+/* ---------- Action buttons ---------- */
+
+.meals-edit-btn,
+.meals-add-btn {
+  background: none;
+  border: 1px solid var(--border-color);
+  border-radius: 0.5rem;
+  padding: 0.375rem 1rem;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  cursor: pointer;
+  color: var(--accent, #3b82f6);
+  transition: background 0.15s ease, border-color 0.15s ease;
+  width: fit-content;
 }
 
-@media (max-width: 480px) {
-  .meals-grid-header, .meals-row {
-    grid-template-columns: 60px repeat(3, 1fr);
+.meals-edit-btn:hover,
+.meals-add-btn:hover {
+  background: rgba(var(--accent-rgb, 59, 130, 246), 0.08);
+  border-color: rgba(var(--accent-rgb, 59, 130, 246), 0.3);
+}
+
+/* ---------- Responsive ---------- */
+
+@media (max-width: 640px) {
+  .meals-header-new {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+    padding: 1rem;
   }
-  .meals-type-col, .meal-title {
-    font-size: 0.6875rem;
+
+  .meals-accordion {
+    padding: 0.75rem;
+    gap: 0.5rem;
+  }
+
+  .meals-card-header {
+    gap: 0.75rem;
+    padding: 0.625rem 0.75rem;
+  }
+
+  .meals-day-badge {
+    width: 3.5rem;
+    height: 3.5rem;
+    border-radius: 0.75rem;
+  }
+
+  .meals-day-badge-emoji {
+    font-size: 1rem;
+  }
+
+  .meals-day-badge-label {
+    font-size: 0.5625rem;
+  }
+
+  .meals-day-badge-date {
+    display: none;
+  }
+
+  .meals-card-body-inner {
+    margin-left: 4.25rem;
+  }
+
+  .meals-cook-badge {
+    display: none;
   }
 }

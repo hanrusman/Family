@@ -2,7 +2,13 @@ import React, { useState, useCallback } from 'react';
 import { useApp } from '../context/AppContext';
 import { api, tabletApi } from '../utils/api';
 import { usePolling } from '../hooks/usePolling';
-import './ShoppingPage.css';
+
+const CATEGORY_EMOJI = {
+  groenten: '🥬', fruit: '🍎', zuivel: '🥛', vlees: '🥩', vis: '🐟',
+  brood: '🥖', dranken: '🥤', snacks: '🍿', pasta: '🍝', rijst: '🍚',
+  conserven: '🥫', diepvries: '🧊', huishouden: '🧹', verzorging: '🧴',
+  overig: '🛒', kruiden: '🌿', sauzen: '🫙', kaas: '🧀', eieren: '🥚',
+};
 
 export default function ShoppingPage() {
   const { isTabletMode } = useApp();
@@ -25,8 +31,6 @@ export default function ShoppingPage() {
   const addItem = async (e) => {
     e.preventDefault();
     if (!newItem.trim()) return;
-
-    // Support multiple items with comma separation
     const items = newItem.split(',').map((s) => s.trim()).filter(Boolean);
     try {
       if (items.length === 1) {
@@ -43,7 +47,6 @@ export default function ShoppingPage() {
 
   const toggleItem = async (id) => {
     try {
-      // Tablet uses tabletApi for toggle (no auth needed), phone uses api
       const fetcher = isTabletMode ? tabletApi : api;
       await fetcher.patch(`/shopping/${id}/toggle`);
       fetchItems();
@@ -65,71 +68,134 @@ export default function ShoppingPage() {
   const checkedCount = data.items.filter((i) => i.checked).length;
 
   return (
-    <div className="shopping-page">
-      <header className="shopping-header">
-        <div>
-          <h2>Boodschappen</h2>
-          <p className="text-secondary text-sm">{uncheckedCount} items</p>
-        </div>
-        <div className="flex items-center gap-2">
-          {checkedCount > 0 && (
-            <button className="btn btn-secondary btn-sm" onClick={clearChecked}>
-              Opruimen ({checkedCount})
-            </button>
-          )}
+    <div className="flex flex-col h-full bg-background-light">
+      {/* Header */}
+      <header className="w-full px-8 py-6 shrink-0">
+        <div className="max-w-3xl mx-auto flex flex-wrap justify-between items-center gap-4">
+          <div>
+            <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight text-text-main">
+              Boodschappen 🛒
+            </h1>
+            <p className="text-text-main/70 text-lg font-medium mt-1">
+              {uncheckedCount} items op de lijst
+            </p>
+          </div>
+          <div className="flex items-center gap-3">
+            {checkedCount > 0 && (
+              <button
+                className="bg-white px-5 py-2.5 rounded-full shadow-soft font-bold text-text-main text-sm border border-muted/50 hover:bg-background-light transition-colors active:scale-95"
+                onClick={clearChecked}
+              >
+                Opruimen ({checkedCount})
+              </button>
+            )}
+          </div>
         </div>
       </header>
 
       {/* Add item form */}
       {!isTabletMode && (
-        <form className="shopping-add" onSubmit={addItem}>
-          <input
-            className="input"
-            value={newItem}
-            onChange={(e) => setNewItem(e.target.value)}
-            placeholder="Item toevoegen (gebruik komma's voor meerdere)"
-          />
-          <button type="submit" className="btn btn-primary">+</button>
-        </form>
+        <div className="px-8 pb-4">
+          <form className="max-w-3xl mx-auto flex gap-3" onSubmit={addItem}>
+            <input
+              className="flex-1 px-5 py-3 bg-white rounded-full border border-muted shadow-soft text-lg font-medium text-text-main placeholder:text-text-main/40 focus:outline-none focus:border-primary transition-colors"
+              value={newItem}
+              onChange={(e) => setNewItem(e.target.value)}
+              placeholder="Item toevoegen (komma's voor meerdere)"
+            />
+            <button
+              type="submit"
+              className="w-12 h-12 bg-primary text-white rounded-full shadow-soft flex items-center justify-center text-2xl font-bold hover:bg-primary/90 transition-colors active:scale-95"
+            >
+              +
+            </button>
+          </form>
+        </div>
       )}
 
-      <div className="shopping-content">
-        {data.grouped.length === 0 ? (
-          <div className="shopping-empty">
-            <p className="text-secondary">Boodschappenlijst is leeg</p>
-          </div>
-        ) : (
-          data.grouped.map((group) => (
-            <div key={group.category} className="shopping-group">
-              <div className="shopping-group-header">
-                <span className="shopping-group-label">{group.label}</span>
-                <span className="text-muted text-xs">{group.items.length}</span>
-              </div>
-              <div className="shopping-list">
-                {group.items.map((item) => (
-                  <button
-                    key={item.id}
-                    className={`shopping-item ${item.checked ? 'shopping-item-checked' : ''}`}
-                    onClick={() => toggleItem(item.id)}
-                  >
-                    <span className={`shopping-check ${item.checked ? 'shopping-check-done' : ''}`}>
-                      {item.checked ? '✓' : ''}
-                    </span>
-                    <span className="shopping-name">{item.name}</span>
-                    {item.quantity && <span className="shopping-qty text-muted">{item.quantity}</span>}
-                  </button>
-                ))}
-              </div>
+      {/* Shopping content */}
+      <div className="flex-1 overflow-y-auto px-8 pb-32">
+        <div className="max-w-3xl mx-auto flex flex-col gap-6 pt-2">
+          {data.grouped.length === 0 ? (
+            <div className="flex items-center justify-center py-16">
+              <p className="text-text-main/50 text-lg font-medium">Boodschappenlijst is leeg</p>
             </div>
-          ))
-        )}
+          ) : (
+            data.grouped.map((group) => (
+              <div key={group.category}>
+                {/* Category header */}
+                <div className="flex items-center gap-2 mb-3">
+                  <span className="text-xl">{CATEGORY_EMOJI[group.category] || '🛒'}</span>
+                  <span className="text-sm font-bold text-text-main/50 uppercase tracking-wider">
+                    {group.label}
+                  </span>
+                  <span className="text-xs text-text-main/40 font-medium">{group.items.length}</span>
+                </div>
 
-        {checkedCount > 0 && (
-          <label className="checkbox-label mt-4" style={{ justifyContent: 'center' }}>
-            <input type="checkbox" checked={showChecked} onChange={(e) => setShowChecked(e.target.checked)} />
-            Toon afgevinkte items
-          </label>
-        )}
+                {/* Items */}
+                <div className="flex flex-col gap-2">
+                  {group.items.map((item) => (
+                    <button
+                      key={item.id}
+                      className={`w-full flex items-center gap-4 bg-white rounded-lg p-4 text-left transition-all active:scale-[0.98] border ${
+                        item.checked
+                          ? 'border-success/30 opacity-50'
+                          : 'border-muted/50 hover:border-primary/30 hover:shadow-soft'
+                      }`}
+                      onClick={() => toggleItem(item.id)}
+                    >
+                      {/* Checkbox */}
+                      <div
+                        className={`w-7 h-7 rounded-lg border-2 flex items-center justify-center shrink-0 transition-all ${
+                          item.checked
+                            ? 'bg-success border-success text-white'
+                            : 'border-muted bg-white'
+                        }`}
+                      >
+                        {item.checked && (
+                          <span className="text-sm font-bold">✓</span>
+                        )}
+                      </div>
+
+                      {/* Item name */}
+                      <span
+                        className={`text-lg font-bold flex-1 ${
+                          item.checked
+                            ? 'line-through text-text-main/50'
+                            : 'text-text-main'
+                        }`}
+                      >
+                        {item.name}
+                      </span>
+
+                      {/* Quantity */}
+                      {item.quantity && (
+                        <span className="text-sm font-medium text-text-main/50">
+                          {item.quantity}
+                        </span>
+                      )}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            ))
+          )}
+
+          {/* Toggle checked items */}
+          {checkedCount > 0 && (
+            <label className="flex items-center justify-center gap-3 py-4 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={showChecked}
+                onChange={(e) => setShowChecked(e.target.checked)}
+                className="w-5 h-5 rounded border-muted text-primary focus:ring-primary"
+              />
+              <span className="text-text-main/60 font-medium">
+                Toon afgevinkte items
+              </span>
+            </label>
+          )}
+        </div>
       </div>
     </div>
   );

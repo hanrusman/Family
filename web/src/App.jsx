@@ -7,6 +7,7 @@ import { useIdleMode } from './hooks/useIdleMode';
 
 // Code-split pages for performance on older tablets
 const LoginPage = lazy(() => import('./pages/LoginPage'));
+const HomePage = lazy(() => import('./pages/HomePage'));
 const CalendarPage = lazy(() => import('./pages/CalendarPage'));
 const ChoresPage = lazy(() => import('./pages/ChoresPage'));
 const WeekMenuPage = lazy(() => import('./pages/WeekMenuPage'));
@@ -45,7 +46,7 @@ function AppRoutes() {
       <Layout>
         <Suspense fallback={<PageLoader />}>
           <Routes>
-            <Route path="/" element={<CalendarPage />} />
+            <Route path="/" element={<HomePage />} />
             <Route path="/kalender" element={<CalendarPage />} />
             <Route path="/klusjes" element={<ChoresPage />} />
             <Route path="/menu" element={<WeekMenuPage />} />
@@ -72,11 +73,11 @@ function AppRoutes() {
     <Layout>
       <Suspense fallback={<PageLoader />}>
         <Routes>
-          <Route path="/" element={<CalendarPage />} />
+          <Route path="/" element={<HomePage />} />
           <Route path="/kalender" element={<CalendarPage />} />
           <Route path="/klusjes" element={<ChoresPage />} />
           <Route path="/menu" element={<WeekMenuPage />} />
-            <Route path="/recept/:dayId" element={<RecipeDetailPage />} />
+          <Route path="/recept/:dayId" element={<RecipeDetailPage />} />
           <Route path="/boodschappen" element={<ShoppingPage />} />
           <Route path="/weer" element={<WeatherPage />} />
           <Route path="/instellingen" element={<SettingsPage />} />

@@ -1,17 +1,28 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useMemo } from 'react';
 import { useApp } from '../context/AppContext';
 import { api, tabletApi } from '../utils/api';
 import { usePolling } from '../hooks/usePolling';
-import { toDateString, formatNL, isToday, TIME_OF_DAY_LABELS } from '../utils/dateUtils';
+import { toDateString } from '../utils/dateUtils';
 import ChoreTemplateModal from '../components/chores/ChoreTemplateModal';
-import './ChoresPage.css';
+
+// Member color palette fallback
+const MEMBER_COLORS = ['#f39e58', '#2A9D8F', '#E76F51', '#A7C957', '#7C3AED', '#06B6D4'];
+
+function getInitial(name) {
+  if (!name) return '?';
+  const trimmed = name.trim();
+  // Check for emoji at the start
+  const emojiMatch = trimmed.match(/^(\p{Emoji_Presentation}|\p{Extended_Pictographic})/u);
+  if (emojiMatch) return emojiMatch[0];
+  return trimmed.charAt(0).toUpperCase();
+}
 
 export default function ChoresPage() {
   const { isTabletMode, familyMembers } = useApp();
   const [chores, setChores] = useState([]);
-  const [stats, setStats] = useState([]);
   const [currentDate] = useState(new Date());
   const [showModal, setShowModal] = useState(false);
+  const [togglingIds, setTogglingIds] = useState(new Set());
 
   const fetchChores = useCallback(async () => {
     try {
@@ -22,25 +33,32 @@ export default function ChoresPage() {
     }
   }, [currentDate, isTabletMode]);
 
-  const fetchStats = useCallback(async () => {
-    if (isTabletMode) return;
-    try {
-      const data = await api.get('/chores/stats');
-      setStats(data);
-    } catch (err) {
-      console.warn('Kan klusjes-stats niet laden:', err.message);
-    }
-  }, [isTabletMode]);
-
   usePolling(fetchChores, 30000, [toDateString(currentDate)]);
-  usePolling(fetchStats, 60000, []);
 
   const toggleChore = async (id) => {
+    if (togglingIds.has(id)) return;
+    setTogglingIds((prev) => new Set(prev).add(id));
+
+    // Optimistic update
+    setChores((prev) =>
+      prev.map((c) => (c.id === id ? { ...c, completed: !c.completed } : c))
+    );
+
     try {
       await (isTabletMode ? tabletApi : api).patch(`/chores/${id}/toggle`);
       fetchChores();
     } catch (err) {
       console.error(err);
+      // Revert optimistic update
+      setChores((prev) =>
+        prev.map((c) => (c.id === id ? { ...c, completed: !c.completed } : c))
+      );
+    } finally {
+      setTogglingIds((prev) => {
+        const next = new Set(prev);
+        next.delete(id);
+        return next;
+      });
     }
   };
 
@@ -55,108 +73,229 @@ export default function ChoresPage() {
   };
 
   // Group chores by member
-  const grouped = {};
-  for (const chore of chores) {
-    const key = chore.member_id || 'unassigned';
-    if (!grouped[key]) {
-      grouped[key] = {
-        member_name: chore.member_name || 'Niet toegewezen',
-        member_color: chore.member_color || 'var(--text-muted)',
-        chores: [],
-      };
+  const grouped = useMemo(() => {
+    const map = {};
+    for (const chore of chores) {
+      const key = chore.member_id || 'unassigned';
+      if (!map[key]) {
+        map[key] = {
+          member_id: chore.member_id,
+          member_name: chore.member_name || 'Niet toegewezen',
+          member_color: chore.member_color || MEMBER_COLORS[Object.keys(map).length % MEMBER_COLORS.length],
+          chores: [],
+        };
+      }
+      map[key].chores.push(chore);
     }
-    grouped[key].chores.push(chore);
-  }
+    return map;
+  }, [chores]);
 
   const completedCount = chores.filter((c) => c.completed).length;
   const totalCount = chores.length;
+  const progressPct = totalCount > 0 ? Math.round((completedCount / totalCount) * 100) : 0;
+  const totalPoints = chores.filter((c) => c.completed).reduce((sum, c) => sum + (c.points || 0), 0);
 
   return (
-    <div className="chores-page">
-      <header className="chores-header">
-        <div>
-          <h2>Klusjes</h2>
-          <p className="text-secondary text-sm" style={{ textTransform: 'capitalize' }}>
-            {formatNL(currentDate, 'EEEE d MMMM')}
-          </p>
+    <div className="flex flex-col h-full bg-background-light dark:bg-background-dark">
+      {/* Header */}
+      <header className="px-8 pt-8 pb-6">
+        <div className="flex items-center justify-between mb-1">
+          <h1 className="text-4xl font-bold text-text-main dark:text-white font-display">
+            Klusjes
+          </h1>
+          <div className="flex items-center gap-3">
+            {totalPoints > 0 && (
+              <div className="bg-primary/20 text-primary font-bold px-4 py-2 rounded-full text-sm flex items-center gap-2">
+                <span>Familie Punten:</span>
+                <span className="bg-primary text-white px-3 py-0.5 rounded-full text-sm">
+                  {totalPoints}
+                </span>
+              </div>
+            )}
+            {!isTabletMode && (
+              <button
+                className="bg-primary hover:bg-primary/90 text-white font-bold px-5 py-2 rounded-full text-sm transition-all"
+                onClick={() => setShowModal(true)}
+              >
+                + Klusje
+              </button>
+            )}
+          </div>
         </div>
-        <div className="flex items-center gap-3">
-          {totalCount > 0 && (
-            <div className="chores-progress">
-              <div className="chores-progress-bar" style={{ width: `${(completedCount / totalCount) * 100}%` }} />
-              <span className="chores-progress-text">{completedCount}/{totalCount}</span>
+        <p className="text-muted dark:text-muted/70 text-sm mb-5">
+          Wie heeft de meeste punten vandaag?
+        </p>
+
+        {/* Family progress bar */}
+        {totalCount > 0 && (
+          <div>
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-sm font-semibold text-text-main dark:text-white/80">
+                Familie Progressie
+              </span>
+              <span className="text-sm font-bold text-text-main dark:text-white/80">
+                {progressPct}%
+              </span>
             </div>
-          )}
-          {!isTabletMode && (
-            <button className="btn btn-primary btn-sm" onClick={() => setShowModal(true)}>+ Klusje</button>
-          )}
-        </div>
+            <div className="h-3 bg-muted/40 dark:bg-white/10 rounded-full overflow-hidden">
+              <div
+                className={`h-full rounded-full transition-all duration-700 ease-out ${
+                  progressPct === 100 ? 'bg-success' : 'bg-primary'
+                }`}
+                style={{ width: `${progressPct}%` }}
+              />
+            </div>
+          </div>
+        )}
       </header>
 
-      <div className="chores-content">
+      {/* Scrollable member columns */}
+      <div className="flex-1 overflow-x-auto hide-scrollbar px-8 pb-32">
         {totalCount === 0 ? (
-          <div className="chores-empty">
-            <p className="text-secondary">Geen klusjes voor vandaag</p>
+          <div className="flex flex-col items-center justify-center py-20">
+            <span className="text-6xl mb-4">🧹</span>
+            <p className="text-text-main/50 dark:text-white/40 text-lg">
+              Geen klusjes voor vandaag
+            </p>
             {!isTabletMode && (
-              <button className="btn btn-primary mt-4" onClick={() => setShowModal(true)}>Klusje toevoegen</button>
+              <button
+                className="bg-primary hover:bg-primary/90 text-white font-bold px-6 py-3 rounded-full mt-6 transition-all"
+                onClick={() => setShowModal(true)}
+              >
+                Klusje toevoegen
+              </button>
             )}
           </div>
         ) : (
-          Object.entries(grouped).map(([key, group]) => (
-            <div key={key} className="chore-group">
-              <div className="chore-group-header">
-                <span className="chore-group-dot" style={{ backgroundColor: group.member_color }} />
-                <span className="chore-group-name">{group.member_name}</span>
-                <span className="text-muted text-sm">
-                  {group.chores.filter((c) => c.completed).length}/{group.chores.length}
-                </span>
-              </div>
-              <div className="chore-list">
-                {group.chores.map((chore) => (
-                  <button
-                    key={chore.id}
-                    className={`chore-item ${chore.completed ? 'chore-done' : ''}`}
-                    onClick={() => toggleChore(chore.id)}
-                  >
-                    <span className={`chore-check ${chore.completed ? 'chore-check-done animate-check' : ''}`}>
-                      {chore.completed ? '✓' : ''}
-                    </span>
-                    <span className="chore-icon">{chore.icon}</span>
-                    <div className="chore-info">
-                      <span className="chore-title">{chore.title}</span>
-                      {chore.time_of_day !== 'anytime' && (
-                        <span className="chore-time text-muted text-xs">
-                          {TIME_OF_DAY_LABELS[chore.time_of_day] || chore.time_of_day}
-                        </span>
-                      )}
-                    </div>
-                    {chore.points > 0 && (
-                      <span className="chore-points">{'★'.repeat(chore.points)}</span>
-                    )}
-                  </button>
-                ))}
-              </div>
-            </div>
-          ))
-        )}
+          <div className="flex gap-8 min-w-max items-start">
+            {Object.entries(grouped).map(([key, group]) => {
+              const memberCompleted = group.chores.filter((c) => c.completed).length;
+              const memberTotal = group.chores.length;
+              const allDone = memberCompleted === memberTotal;
+              const memberPct = Math.round((memberCompleted / memberTotal) * 100);
 
-        {/* Stats voor ouders */}
-        {!isTabletMode && stats.length > 0 && (
-          <div className="chore-stats">
-            <h3>Weekoverzicht</h3>
-            <div className="stats-grid">
-              {stats.map((stat) => (
-                <div key={stat.member_id || 'none'} className="stat-card card">
-                  <div className="stat-name" style={{ color: stat.member_color }}>
-                    {stat.member_name || 'Niet toegewezen'}
+              return (
+                <div
+                  key={key}
+                  className={`w-[280px] flex-shrink-0 rounded-2xl p-6 transition-all duration-500 ${
+                    allDone
+                      ? 'bg-success/20 border-2 border-dashed border-success/40'
+                      : 'bg-white/60 dark:bg-white/5 border border-muted/30 dark:border-white/10'
+                  }`}
+                >
+                  {/* Avatar */}
+                  <div className="flex flex-col items-center mb-4">
+                    <div
+                      className="w-[120px] h-[120px] rounded-full border-4 border-white dark:border-white/20 flex items-center justify-center shadow-soft mb-3"
+                      style={{ backgroundColor: group.member_color }}
+                    >
+                      <span className="text-5xl text-white font-bold select-none">
+                        {getInitial(group.member_name)}
+                      </span>
+                    </div>
+
+                    {/* Name */}
+                    <h2 className="text-2xl font-bold text-text-main dark:text-white text-center">
+                      {group.member_name}
+                    </h2>
+
+                    {/* All-done celebration */}
+                    {allDone && (
+                      <div className="flex items-center gap-1 mt-1">
+                        <span className="text-lg">✨</span>
+                        <span className="bg-success text-white text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider">
+                          Klaar!
+                        </span>
+                        <span className="text-lg">✨</span>
+                      </div>
+                    )}
+
+                    {/* Progress bar */}
+                    <div className="w-full mt-3">
+                      <div className="h-3 bg-muted/30 dark:bg-white/10 rounded-full overflow-hidden">
+                        <div
+                          className={`h-full rounded-full transition-all duration-500 ease-out ${
+                            allDone ? 'bg-success' : 'bg-primary'
+                          }`}
+                          style={{ width: `${memberPct}%` }}
+                        />
+                      </div>
+                      <p className="text-xs text-text-main/60 dark:text-white/50 text-center mt-1.5 font-medium">
+                        {memberCompleted}/{memberTotal} Klusjes klaar
+                      </p>
+                    </div>
                   </div>
-                  <div className="stat-numbers">
-                    <span className="stat-completed">{stat.completed || 0}/{stat.total}</span>
-                    <span className="stat-points">{'★'} {stat.points || 0} punten</span>
+
+                  {/* Chore cards */}
+                  <div className="flex flex-col gap-3">
+                    {group.chores.map((chore) => (
+                      <button
+                        key={chore.id}
+                        onClick={() => toggleChore(chore.id)}
+                        disabled={togglingIds.has(chore.id)}
+                        className={`w-full rounded-xl p-4 flex items-center gap-4 transition-all duration-300 text-left ${
+                          chore.completed
+                            ? 'bg-success opacity-60 text-white shadow-none'
+                            : 'bg-background-light dark:bg-white/5 shadow-soft border border-muted/50 dark:border-white/10 hover:scale-[1.02] active:scale-[0.98]'
+                        }`}
+                      >
+                        {/* Emoji icon */}
+                        <div
+                          className={`w-12 h-12 rounded-full flex items-center justify-center flex-shrink-0 text-xl ${
+                            chore.completed
+                              ? 'bg-white/20 grayscale'
+                              : 'bg-muted/30 dark:bg-white/10'
+                          }`}
+                        >
+                          {chore.icon || '📋'}
+                        </div>
+
+                        {/* Title and points */}
+                        <div className="flex-1 min-w-0">
+                          <span
+                            className={`text-lg font-bold block truncate ${
+                              chore.completed
+                                ? 'line-through text-white/80'
+                                : 'text-text-main dark:text-white'
+                            }`}
+                          >
+                            {chore.title}
+                          </span>
+                          {chore.points > 0 && (
+                            <span
+                              className={`text-xs font-medium ${
+                                chore.completed ? 'text-white/60' : 'text-primary'
+                              }`}
+                            >
+                              {'★'.repeat(chore.points)} {chore.points} {chore.points === 1 ? 'punt' : 'punten'}
+                            </span>
+                          )}
+                        </div>
+
+                        {/* Checkbox */}
+                        <div
+                          className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 transition-all ${
+                            chore.completed
+                              ? 'bg-white text-success'
+                              : 'border-2 border-muted dark:border-white/20'
+                          }`}
+                        >
+                          {chore.completed && (
+                            <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                              <path
+                                fillRule="evenodd"
+                                d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                                clipRule="evenodd"
+                              />
+                            </svg>
+                          )}
+                        </div>
+                      </button>
+                    ))}
                   </div>
                 </div>
-              ))}
-            </div>
+              );
+            })}
           </div>
         )}
       </div>
