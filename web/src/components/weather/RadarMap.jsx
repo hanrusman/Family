@@ -1,47 +1,57 @@
-import React, { useState, useCallback } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 
-export default function RadarMap({ lat, lon }) {
-  const [key, setKey] = useState(0);
+const RADAR_URL = 'https://image.buienradar.nl/2.0/image/animation/RadarMapRainNL';
+const REFRESH_INTERVAL = 5 * 60 * 1000; // 5 minutes
 
-  const handleRefresh = useCallback(() => {
-    setKey((k) => k + 1);
+export default function RadarMap({ latitude: _lat, longitude: _lon }) {
+  const [cacheBust, setCacheBust] = useState(Date.now());
+
+  useEffect(() => {
+    const interval = setInterval(() => setCacheBust(Date.now()), REFRESH_INTERVAL);
+    return () => clearInterval(interval);
   }, []);
 
-  // Buienradar embed URL with lat/lon
-  const radarUrl = lat != null && lon != null
-    ? `https://gadgets.buienradar.nl/gadget/zoommap/?lat=${lat}&lng=${lon}&ovession=1&zoom=8&size=3&naam=`
-    : 'https://gadgets.buienradar.nl/gadget/zoommap/?lat=52.37&lng=4.89&ovession=1&zoom=8&size=3&naam=';
+  const handleRefresh = useCallback(() => setCacheBust(Date.now()), []);
+
+  const src = `${RADAR_URL}?height=550&width=550&renderBackground=True&renderBranding=False&renderText=True&History=2&Forecast=6&_t=${cacheBust}`;
 
   return (
-    <div
-      className="rounded-2xl overflow-hidden animate-fade-in"
-      style={{
-        background: 'var(--bg-card)',
-        border: '1px solid var(--border-color)',
-      }}
-    >
-      <div className="flex items-center justify-between px-4 py-3">
-        <h3 className="text-sm font-semibold" style={{ color: 'var(--text-secondary)' }}>
-          Regenradar
-        </h3>
+    <div className="card-flush" style={{ overflow: 'hidden' }}>
+      <div
+        className="flex items-center justify-between"
+        style={{ padding: 'var(--space-lg)', paddingBottom: 'var(--space-md)' }}
+      >
+        <h2 className="section-title">Regenradar</h2>
         <button
           onClick={handleRefresh}
-          className="btn btn-ghost btn-sm rounded-lg"
-          title="Vernieuwen"
+          style={{
+            background: 'none',
+            border: 'none',
+            cursor: 'pointer',
+            color: 'var(--color-text-tertiary)',
+            fontSize: 'var(--text-sm)',
+            padding: 'var(--space-xs)',
+            transition: 'color var(--transition-fast)',
+          }}
+          title="Ververs radar"
         >
-          🔄
+          ↻
         </button>
       </div>
-      <div className="relative w-full" style={{ paddingBottom: '75%' }}>
-        <iframe
-          key={key}
-          src={radarUrl}
-          title="Buienradar regenradar"
-          className="absolute inset-0 w-full h-full"
-          style={{ border: 'none' }}
-          loading="lazy"
-          allowFullScreen={false}
+      <div style={{ aspectRatio: '1', background: 'var(--color-surface-0)' }}>
+        <img
+          src={src}
+          alt="Buienradar regenradar Nederland"
+          style={{
+            display: 'block',
+            width: '100%',
+            height: '100%',
+            objectFit: 'contain',
+          }}
         />
+      </div>
+      <div style={{ padding: 'var(--space-sm) var(--space-lg)', color: 'var(--color-text-tertiary)', fontSize: 'var(--text-xs)' }}>
+        Bron: Buienradar / KNMI
       </div>
     </div>
   );

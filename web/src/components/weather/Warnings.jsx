@@ -1,66 +1,44 @@
-import React from 'react';
-
-const SEVERITY_STYLES = {
-  yellow: { bg: '#fef9c3', border: '#facc15', text: '#854d0e', darkBg: '#422006', darkText: '#fde047' },
-  orange: { bg: '#ffedd5', border: '#fb923c', text: '#9a3412', darkBg: '#431407', darkText: '#fdba74' },
-  red:    { bg: '#fee2e2', border: '#f87171', text: '#991b1b', darkBg: '#450a0a', darkText: '#fca5a5' },
-};
-
-function getSeverityKey(severity) {
-  if (!severity) return 'yellow';
-  const s = severity.toLowerCase();
-  if (s.includes('red') || s.includes('rood')) return 'red';
-  if (s.includes('orange') || s.includes('oranje')) return 'orange';
-  return 'yellow';
-}
+import { WARNING_COLORS } from '../../utils/weatherColors';
 
 export default function Warnings({ data }) {
-  if (!data || !Array.isArray(data) || data.length === 0) return null;
-
-  // Also handle { warnings: [...] } shape
-  const warnings = Array.isArray(data) ? data : (data.warnings || []);
-  if (warnings.length === 0) return null;
+  if (data.warnings.length === 0) return null;
 
   return (
-    <div className="flex flex-col gap-2 animate-fade-in">
-      <h3 className="text-sm font-semibold" style={{ color: 'var(--text-secondary)' }}>
-        Waarschuwingen
-      </h3>
-      {warnings.map((w, i) => {
-        const sevKey = getSeverityKey(w.severity || w.level);
-        const style = SEVERITY_STYLES[sevKey];
-
-        return (
+    <div className="card">
+      <h2 className="section-title" style={{ marginBottom: 'var(--space-md)' }}>KNMI Waarschuwingen</h2>
+      <div className="flex flex-col" style={{ gap: 'var(--space-sm)' }}>
+        {data.warnings.map((warning, i) => (
           <div
-            key={w.id || i}
-            className="rounded-xl p-4 border-l-4"
+            key={i}
+            className="flex items-start"
             style={{
-              background: style.bg,
-              borderLeftColor: style.border,
-              color: style.text,
+              gap: 'var(--space-md)',
+              padding: 'var(--space-md)',
+              borderRadius: 'var(--radius-md)',
+              backgroundColor: `${WARNING_COLORS[warning.level]}08`,
             }}
           >
-            <div className="flex items-center gap-2 mb-1">
-              <span className="text-lg">
-                {sevKey === 'red' ? '🔴' : sevKey === 'orange' ? '🟠' : '🟡'}
-              </span>
-              <span className="font-bold text-sm">
-                {w.type || w.event || 'Waarschuwing'}
-              </span>
+            <div
+              style={{
+                width: 10,
+                height: 10,
+                borderRadius: '50%',
+                marginTop: 3,
+                flexShrink: 0,
+                backgroundColor: WARNING_COLORS[warning.level],
+              }}
+            />
+            <div>
+              <p style={{ color: 'var(--color-text-primary)', fontSize: 'var(--text-sm)', fontWeight: 500 }}>
+                {warning.area}
+              </p>
+              <p style={{ color: 'var(--color-text-secondary)', fontSize: 'var(--text-xs)', marginTop: '2px' }}>
+                {warning.description}
+              </p>
             </div>
-            {w.area && (
-              <div className="text-xs font-medium mb-1">
-                {w.area}
-              </div>
-            )}
-            {(w.description || w.headline) && (
-              <div className="text-sm">
-                {w.description || w.headline}
-              </div>
-            )}
           </div>
-        );
-      })}
+        ))}
+      </div>
     </div>
   );
 }

@@ -1,0 +1,102 @@
+import { useState, useEffect, useCallback } from 'react';
+
+const STORAGE_KEY = 'nl-weather-locations';
+const SELECTED_KEY = 'nl-weather-selected-location';
+
+function loadLocations() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    return raw ? JSON.parse(raw) : [];
+  } catch {
+    return [];
+  }
+}
+
+function loadSelectedId() {
+  try {
+    return localStorage.getItem(SELECTED_KEY);
+  } catch {
+    return null;
+  }
+}
+
+export function useLocations(serverDefault) {
+  const [locations, setLocations] = useState(loadLocations);
+  const [selectedId, setSelectedId] = useState(loadSelectedId);
+
+  useEffect(() => {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(locations));
+  }, [locations]);
+
+  useEffect(() => {
+    if (selectedId) {
+      localStorage.setItem(SELECTED_KEY, selectedId);
+    } else {
+      localStorage.removeItem(SELECTED_KEY);
+    }
+  }, [selectedId]);
+
+  const selectedLocation =
+    locations.find((l) => l.id === selectedId) ??
+    locations[0] ??
+    (serverDefault
+      ? {
+          id: '__default__',
+          name: serverDefault.locationName,
+          latitude: serverDefault.latitude,
+          longitude: serverDefault.longitude,
+          province: serverDefault.province,
+        }
+      : null);
+
+  const addLocation = useCallback((loc) => {
+    const newLoc = { ...loc, id: crypto.randomUUID() };
+    setLocations((prev) => [...prev, newLoc]);
+    setSelectedId(newLoc.id);
+  }, []);
+
+  const removeLocation = useCallback((id) => {
+    setLocations((prev) => prev.filter((l) => l.id !== id));
+    setSelectedId((prev) => (prev === id ? null : prev));
+  }, []);
+
+  const selectLocation = useCallback((id) => {
+    setSelectedId(id);
+  }, []);
+
+  const updateGpsLocation = useCallback((latitude, longitude) => {
+    setLocations((prev) => {
+      const existing = prev.find((l) => l.isGps);
+      if (existing) {
+        return prev.map((l) =>
+          l.isGps ? { ...l, latitude, longitude } : l
+        );
+      }
+      const gpsLoc = {
+        id: crypto.randomUUID(),
+        name: 'Huidige locatie',
+        latitude,
+        longitude,
+        isGps: true,
+      };
+      return [gpsLoc, ...prev];
+    });
+    // Select GPS location after state update
+    setTimeout(() => {
+      setLocations((prev) => {
+        const gps = prev.find((l) => l.isGps);
+        if (gps) setSelectedId(gps.id);
+        return prev;
+      });
+    }, 0);
+  }, []);
+
+  return {
+    locations,
+    selectedLocation,
+    addLocation,
+    removeLocation,
+    selectLocation,
+    updateGpsLocation,
+  };
+}

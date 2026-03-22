@@ -1,155 +1,138 @@
-import React from 'react';
-import {
-  useAppConfig,
-  useForecast,
-  useCurrentWeather,
-  useWarnings,
-  useStookwijzer,
-} from '../hooks/useWeatherData';
-import CurrentWeather from '../components/weather/CurrentWeather';
+import '../styles/weather.css';
+import { useAppConfig, useForecast, useCurrentWeather, useWarnings, useStookwijzer, useAirQuality } from '../hooks/useWeatherData';
+import { useLocations } from '../hooks/useLocations';
+import { useModelToggle } from '../hooks/useModelToggle';
+import MultiModelChart from '../components/weather/MultiModelChart';
 import DailyForecast from '../components/weather/DailyForecast';
-import Warnings from '../components/weather/Warnings';
 import RadarMap from '../components/weather/RadarMap';
-import WeatherChart from '../components/weather/WeatherChart';
-
-const STOOKWIJZER_COLORS = {
-  groen: { bg: '#dcfce7', text: '#166534', emoji: '🟢', label: 'Stoken kan' },
-  oranje: { bg: '#ffedd5', text: '#9a3412', emoji: '🟠', label: 'Liever niet stoken' },
-  rood: { bg: '#fee2e2', text: '#991b1b', emoji: '🔴', label: 'Niet stoken' },
-};
+import Warnings from '../components/weather/Warnings';
+import WeatherInsights from '../components/weather/WeatherInsights';
+import ExternalLinks from '../components/weather/ExternalLinks';
+import LocationPicker from '../components/weather/LocationPicker';
+import { formatDateTime } from '../utils/weatherFormat';
 
 export default function WeatherPage() {
   const config = useAppConfig();
-  const lat = config?.lat ?? config?.latitude;
-  const lon = config?.lon ?? config?.longitude;
+  const {
+    locations,
+    selectedLocation,
+    addLocation,
+    removeLocation,
+    selectLocation,
+    updateGpsLocation,
+  } = useLocations(config);
 
-  const { data: currentData, loading: currentLoading } = useCurrentWeather(lat, lon);
-  const { data: forecastData } = useForecast(7, lat, lon);
-  const { data: warningsData } = useWarnings();
-  const { data: stookData } = useStookwijzer(lat, lon);
+  const lat = selectedLocation?.latitude;
+  const lon = selectedLocation?.longitude;
 
-  if (currentLoading && !currentData) {
+  const { data: forecast, loading: forecastLoading, error: forecastError } = useForecast(14, lat, lon);
+  const { data: currentWeather, loading: currentLoading } = useCurrentWeather(lat, lon);
+  const warnings = useWarnings();
+  const stookwijzer = useStookwijzer(lat, lon);
+  const airQuality = useAirQuality(lat, lon);
+  const { enabledModels, toggle, isEnabled, allModels } = useModelToggle();
+
+  if (forecastLoading && currentLoading) {
     return (
-      <div
-        className="flex items-center justify-center"
-        style={{ height: '50vh', color: 'var(--text-secondary)' }}
-      >
-        Weer laden...
+      <div className="weather-page">
+        <div className="min-h-screen flex items-center justify-center">
+          <span style={{ color: 'var(--color-text-tertiary)', fontSize: 'var(--text-lg)' }}>
+            Weerdata laden...
+          </span>
+        </div>
       </div>
     );
   }
 
-  // Determine stookwijzer status
-  const stookStatus = stookData?.advies || stookData?.advice || stookData?.status;
-  const stookInfo = stookStatus
-    ? STOOKWIJZER_COLORS[stookStatus.toLowerCase()] || STOOKWIJZER_COLORS.groen
-    : null;
-
   return (
-    <div
-      className="flex flex-col gap-4 p-4 pb-8"
-      style={{ overflowY: 'auto', height: '100%' }}
-    >
-      {/* Current weather hero */}
-      <CurrentWeather data={currentData} />
+    <div className="weather-page">
+      <div className="min-h-screen">
+        <div className="max-w-7xl mx-auto" style={{ padding: 'var(--space-lg)' }}>
+          {/* Header */}
+          <header className="flex items-center justify-between" style={{ marginBottom: 'var(--space-xl)' }}>
+            <div>
+              <LocationPicker
+                locations={locations}
+                selectedLocation={selectedLocation}
+                onSelect={selectLocation}
+                onAdd={addLocation}
+                onRemove={removeLocation}
+                onGps={updateGpsLocation}
+                locationName={config?.locationName}
+              />
+              {selectedLocation && (
+                <p style={{ color: 'var(--color-text-tertiary)', fontSize: 'var(--text-sm)', marginTop: '2px' }}>
+                  {selectedLocation.latitude.toFixed(2)}\u00b0N, {selectedLocation.longitude.toFixed(2)}\u00b0E
+                </p>
+              )}
+            </div>
 
-      {/* Warnings */}
-      <Warnings data={warningsData} />
+            {forecast && (
+              <span className="hidden sm:inline" style={{ color: 'var(--color-text-tertiary)', fontSize: 'var(--text-xs)' }}>
+                {formatDateTime(forecast.fetchedAt)}
+              </span>
+            )}
+          </header>
 
-      {/* 7-day forecast */}
-      <DailyForecast data={forecastData} />
-
-      {/* Temperature chart */}
-      <WeatherChart data={forecastData} />
-
-      {/* Radar + extras grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <RadarMap lat={lat} lon={lon} />
-
-        {/* Sidebar extras */}
-        <div className="flex flex-col gap-4">
-          {/* Stookwijzer badge */}
-          {stookInfo && (
-            <div
-              className="rounded-2xl p-4 animate-fade-in"
-              style={{
-                background: 'var(--bg-card)',
-                border: '1px solid var(--border-color)',
-              }}
-            >
-              <h3 className="text-sm font-semibold mb-2" style={{ color: 'var(--text-secondary)' }}>
-                Stookwijzer
-              </h3>
-              <div
-                className="flex items-center gap-3 rounded-xl p-3"
-                style={{ background: stookInfo.bg, color: stookInfo.text }}
-              >
-                <span className="text-2xl">{stookInfo.emoji}</span>
-                <div>
-                  <div className="font-bold text-sm">{stookInfo.label}</div>
-                  {stookData?.lki != null && (
-                    <div className="text-xs mt-0.5">
-                      Luchtkwaliteitsindex: {stookData.lki}
-                    </div>
-                  )}
-                </div>
-              </div>
+          {forecastError && (
+            <div className="card" style={{ marginBottom: 'var(--space-lg)', background: 'rgba(239, 68, 68, 0.06)', borderColor: 'rgba(239, 68, 68, 0.15)', color: '#f87171' }}>
+              {forecastError}
             </div>
           )}
 
-          {/* Quick links */}
-          <div
-            className="rounded-2xl p-4 animate-fade-in"
-            style={{
-              background: 'var(--bg-card)',
-              border: '1px solid var(--border-color)',
-            }}
-          >
-            <h3 className="text-sm font-semibold mb-2" style={{ color: 'var(--text-secondary)' }}>
-              Meer weer
-            </h3>
-            <div className="flex flex-col gap-2">
-              <WeatherLink
-                href="https://www.buienradar.nl"
-                emoji="🌧️"
-                label="Buienradar"
-              />
-              <WeatherLink
-                href="https://www.knmi.nl/nederland-nu/weer/waarschuwingen"
-                emoji="⚠️"
-                label="KNMI Waarschuwingen"
-              />
-              <WeatherLink
-                href="https://www.stookwijzer.nu"
-                emoji="🔥"
-                label="Stookwijzer"
+          {/* Insights -- hero section */}
+          <WeatherInsights
+            forecast={forecast}
+            currentWeather={currentWeather}
+            stookwijzer={stookwijzer}
+            warnings={warnings}
+            airQuality={airQuality}
+          />
+
+          {/* Daily forecast -- full width */}
+          {forecast && (
+            <div style={{ marginTop: 'var(--space-lg)' }}>
+              <DailyForecast forecast={forecast} enabledModels={enabledModels} />
+            </div>
+          )}
+
+          {/* Deep dive: model charts */}
+          {forecast && (
+            <div style={{ marginTop: 'var(--space-lg)' }}>
+              <MultiModelChart
+                forecast={forecast}
+                enabledModels={enabledModels}
+                allModels={allModels}
+                isEnabled={isEnabled}
+                onToggle={toggle}
               />
             </div>
+          )}
+
+          {/* KNMI warnings detail */}
+          {warnings && warnings.warnings.length > 0 && (
+            <div style={{ marginTop: 'var(--space-lg)' }}>
+              <Warnings data={warnings} />
+            </div>
+          )}
+
+          {/* Bottom row: radar + external links */}
+          <div className="grid grid-cols-1 lg:grid-cols-2" style={{ gap: 'var(--space-lg)', marginTop: 'var(--space-lg)' }}>
+            <RadarMap
+              latitude={selectedLocation?.latitude ?? config?.latitude ?? 52.37}
+              longitude={selectedLocation?.longitude ?? config?.longitude ?? 4.89}
+            />
+            {selectedLocation && (
+              <ExternalLinks latitude={selectedLocation.latitude} longitude={selectedLocation.longitude} />
+            )}
           </div>
+
+          {/* Footer */}
+          <footer className="text-center" style={{ marginTop: 'var(--space-2xl)', paddingTop: 'var(--space-lg)', borderTop: '1px solid var(--color-border)', color: 'var(--color-text-tertiary)', fontSize: 'var(--text-xs)' }}>
+            Data: Open-Meteo (CC-BY-4.0) &middot; KNMI (CC-BY-4.0) &middot; Stookwijzer
+          </footer>
         </div>
       </div>
     </div>
-  );
-}
-
-function WeatherLink({ href, emoji, label }) {
-  return (
-    <a
-      href={href}
-      target="_blank"
-      rel="noopener noreferrer"
-      className="flex items-center gap-2 rounded-lg p-2 transition-all"
-      style={{
-        background: 'var(--bg-tertiary)',
-        color: 'var(--text-primary)',
-        textDecoration: 'none',
-      }}
-    >
-      <span className="text-lg">{emoji}</span>
-      <span className="text-sm font-medium">{label}</span>
-      <span className="ml-auto text-xs" style={{ color: 'var(--text-muted)' }}>
-        ↗
-      </span>
-    </a>
   );
 }

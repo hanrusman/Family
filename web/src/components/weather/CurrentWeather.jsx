@@ -1,92 +1,81 @@
-import React from 'react';
-import { getWeatherDescription, getWeatherEmoji } from '../../utils/weatherCodes';
-import { windToBeaufort, windToCompass, formatTemp, getUVAdvice } from '../../utils/weatherFormat';
+import { MODEL_LABELS } from '../../utils/weatherColors';
+import { formatTempFull, formatWindFull, formatHumidity, formatPressure, averageValues } from '../../utils/weatherFormat';
+import { getWeatherInfo } from '../../utils/weatherCodes';
 
-export default function CurrentWeather({ data }) {
-  if (!data?.current) return null;
+export default function CurrentWeather({ data, locationName }) {
+  const modelEntries = Object.entries(data.models);
+  if (modelEntries.length === 0) return null;
 
-  const c = data.current;
-  const beaufort = windToBeaufort(c.wind_speed_10m);
-  const compass = windToCompass(c.wind_direction_10m);
-  const emoji = getWeatherEmoji(c.weather_code);
-  const description = getWeatherDescription(c.weather_code);
-  const uvIndex = c.uv_index != null ? Math.round(c.uv_index) : null;
+  const temps = modelEntries.map(([, m]) => m.temperature);
+  const winds = modelEntries.map(([, m]) => m.windSpeed);
+  const humidities = modelEntries.map(([, m]) => m.humidity);
+  const pressures = modelEntries.map(([, m]) => m.pressure).filter((p) => p > 0);
+  const feelsLike = modelEntries.map(([, m]) => m.apparentTemperature);
+
+  const primaryModel = data.models.knmi_seamless || modelEntries[0][1];
+  const weatherInfo = getWeatherInfo(primaryModel.weatherCode);
+  const avgTemp = averageValues(temps);
+  const avgFeels = averageValues(feelsLike);
 
   return (
-    <div
-      className="rounded-2xl p-6 animate-fade-in"
-      style={{
-        background: 'var(--bg-card)',
-        border: '1px solid var(--border-color)',
-        boxShadow: 'var(--shadow-lg)',
-      }}
-    >
-      {/* Main temperature row */}
-      <div className="flex items-center justify-between mb-4">
+    <div className="card">
+      {/* Hero -- glanceable in 1 second */}
+      <div className="flex items-start justify-between">
         <div>
-          <div className="text-5xl font-bold" style={{ color: 'var(--text-primary)' }}>
-            {formatTemp(c.temperature_2m)}
+          <p className="stat-label">{locationName}</p>
+          <div className="flex items-end" style={{ gap: 'var(--space-sm)', marginTop: 'var(--space-xs)' }}>
+            <span style={{ fontSize: 'var(--text-4xl)', fontWeight: 200, letterSpacing: '-0.04em', lineHeight: 1, color: 'var(--color-text-bright)' }}>
+              {Math.round(avgTemp)}°
+            </span>
+            <span style={{ fontSize: '2rem', lineHeight: 1, marginBottom: '4px' }}>{weatherInfo.icon}</span>
           </div>
-          {c.apparent_temperature != null && (
-            <div className="text-sm mt-1" style={{ color: 'var(--text-muted)' }}>
-              Voelt als {formatTemp(c.apparent_temperature)}
+          <p style={{ color: 'var(--color-text-secondary)', fontSize: 'var(--text-base)', marginTop: 'var(--space-xs)' }}>
+            {weatherInfo.description}
+          </p>
+          <p style={{ color: 'var(--color-text-tertiary)', fontSize: 'var(--text-sm)', marginTop: '2px' }}>
+            Voelt als {formatTempFull(avgFeels)}
+          </p>
+        </div>
+
+        <div className="text-right flex flex-col" style={{ gap: 'var(--space-md)' }}>
+          <div>
+            <p className="stat-label">Wind</p>
+            <p style={{ color: 'var(--color-text-primary)', fontSize: 'var(--text-sm)', fontWeight: 500 }}>
+              {formatWindFull(averageValues(winds))}
+            </p>
+          </div>
+          <div>
+            <p className="stat-label">Vochtigheid</p>
+            <p style={{ color: 'var(--color-text-primary)', fontSize: 'var(--text-sm)', fontWeight: 500 }}>
+              {formatHumidity(averageValues(humidities))}
+            </p>
+          </div>
+          {pressures.length > 0 && (
+            <div>
+              <p className="stat-label">Luchtdruk</p>
+              <p style={{ color: 'var(--color-text-primary)', fontSize: 'var(--text-sm)', fontWeight: 500 }}>
+                {formatPressure(averageValues(pressures))}
+              </p>
             </div>
           )}
         </div>
-        <div className="text-center">
-          <div className="text-6xl">{emoji}</div>
-          <div className="text-sm font-medium mt-1" style={{ color: 'var(--text-secondary)' }}>
-            {description}
-          </div>
-        </div>
       </div>
 
-      {/* Detail grid */}
-      <div className="grid grid-cols-2 gap-3 mt-4">
-        <DetailItem
-          label="Wind"
-          value={`${beaufort} Bft ${compass}`}
-          sub={`${Math.round(c.wind_speed_10m)} km/u`}
-        />
-        <DetailItem
-          label="Vochtigheid"
-          value={`${Math.round(c.relative_humidity_2m ?? 0)}%`}
-        />
-        {uvIndex != null && (
-          <DetailItem
-            label="UV-index"
-            value={uvIndex}
-            sub={getUVAdvice(uvIndex)}
-          />
-        )}
-        {c.precipitation != null && (
-          <DetailItem
-            label="Neerslag"
-            value={`${c.precipitation} mm`}
-          />
-        )}
-      </div>
-    </div>
-  );
-}
-
-function DetailItem({ label, value, sub }) {
-  return (
-    <div
-      className="rounded-xl p-3"
-      style={{ background: 'var(--bg-tertiary)' }}
-    >
-      <div className="text-xs font-medium mb-1" style={{ color: 'var(--text-muted)' }}>
-        {label}
-      </div>
-      <div className="text-base font-bold" style={{ color: 'var(--text-primary)' }}>
-        {value}
-      </div>
-      {sub && (
-        <div className="text-xs mt-0.5" style={{ color: 'var(--text-secondary)' }}>
-          {sub}
+      {/* Per-model breakdown */}
+      <div style={{ marginTop: 'var(--space-lg)', paddingTop: 'var(--space-md)', borderTop: '1px solid var(--color-border)' }}>
+        <div className="grid grid-cols-5" style={{ gap: 'var(--space-sm)' }}>
+          {modelEntries.map(([modelId, m]) => (
+            <div key={modelId} className="text-center">
+              <p style={{ color: 'var(--color-text-tertiary)', fontSize: 'var(--text-xs)', letterSpacing: '0.04em', textTransform: 'uppercase' }}>
+                {MODEL_LABELS[modelId]?.split(' ').pop()}
+              </p>
+              <p style={{ color: 'var(--color-text-primary)', fontSize: 'var(--text-sm)', fontWeight: 600, marginTop: '2px' }}>
+                {formatTempFull(m.temperature)}
+              </p>
+            </div>
+          ))}
         </div>
-      )}
+      </div>
     </div>
   );
 }

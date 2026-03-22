@@ -1,95 +1,102 @@
-/**
- * Weather formatting utilities
- */
+export function formatTemp(value) {
+  return `${Math.round(value)}°`;
+}
 
-/**
- * Convert wind speed in km/h to Beaufort scale (0-12)
- */
-export function windToBeaufort(kmh) {
-  if (kmh < 1) return 0;
-  if (kmh < 6) return 1;
-  if (kmh < 12) return 2;
-  if (kmh < 20) return 3;
-  if (kmh < 29) return 4;
-  if (kmh < 39) return 5;
-  if (kmh < 50) return 6;
-  if (kmh < 62) return 7;
-  if (kmh < 75) return 8;
-  if (kmh < 89) return 9;
-  if (kmh < 103) return 10;
-  if (kmh < 118) return 11;
+export function formatTempFull(value) {
+  return `${value.toFixed(1)}°C`;
+}
+
+const BEAUFORT_THRESHOLDS = [1, 6, 12, 20, 29, 39, 50, 62, 75, 89, 103, 118];
+
+export function kmhToBeaufort(kmh) {
+  for (let i = 0; i < BEAUFORT_THRESHOLDS.length; i++) {
+    if (kmh < BEAUFORT_THRESHOLDS[i]) return i;
+  }
   return 12;
 }
 
-const COMPASS_DIRECTIONS = ['N', 'NO', 'O', 'ZO', 'Z', 'ZW', 'W', 'NW'];
-
-/**
- * Convert wind direction in degrees to compass direction (Dutch)
- */
-export function windToCompass(degrees) {
-  if (degrees == null || isNaN(degrees)) return '-';
-  const index = Math.round(((degrees % 360) + 360) % 360 / 45) % 8;
-  return COMPASS_DIRECTIONS[index];
+export function formatWind(value) {
+  return `${kmhToBeaufort(value)} bft`;
 }
 
-/**
- * Format temperature with 1 decimal and unit
- */
-export function formatTemp(celsius) {
-  if (celsius == null || isNaN(celsius)) return '-';
-  return `${Number(celsius).toFixed(1)}°C`;
+export function formatWindFull(value) {
+  return `${kmhToBeaufort(value)} bft (${Math.round(value)} km/u)`;
 }
 
-/**
- * Get Dutch UV advice based on UV index
- */
-export function getUVAdvice(index) {
-  if (index == null || isNaN(index)) return '';
-  if (index <= 2) return 'Laag - geen bescherming nodig';
-  if (index <= 5) return 'Matig - smeer in bij lang buiten zijn';
-  if (index <= 7) return 'Hoog - zonnebrand & schaduw zoeken';
-  if (index <= 10) return 'Zeer hoog - vermijd de zon';
-  return 'Extreem - blijf binnen';
+export function formatPrecip(value) {
+  return `${value.toFixed(1)} mm`;
 }
 
-const MODEL_COLORS = {
-  best_match: '#3b82f6',
-  gfs_seamless: '#ef4444',
-  ecmwf_ifs025: '#22c55e',
-  meteofrance_seamless: '#f59e0b',
-  icon_seamless: '#8b5cf6',
-  gem_seamless: '#06b6d4',
-  knmi_seamless: '#ec4899',
-  dmi_seamless: '#14b8a6',
-  jma_seamless: '#f97316',
-  metno_seamless: '#6366f1',
-  ukmo_seamless: '#84cc16',
-};
-
-const MODEL_LABELS = {
-  best_match: 'Best Match',
-  gfs_seamless: 'GFS (US)',
-  ecmwf_ifs025: 'ECMWF (EU)',
-  meteofrance_seamless: 'Meteo France',
-  icon_seamless: 'ICON (DE)',
-  gem_seamless: 'GEM (CA)',
-  knmi_seamless: 'KNMI (NL)',
-  dmi_seamless: 'DMI (DK)',
-  jma_seamless: 'JMA (JP)',
-  metno_seamless: 'MET Norway',
-  ukmo_seamless: 'UK Met Office',
-};
-
-/**
- * Get hex color for a weather model
- */
-export function getModelColor(modelId) {
-  return MODEL_COLORS[modelId] ?? '#9ca3af';
+export function formatPressure(value) {
+  return `${Math.round(value)} hPa`;
 }
 
-/**
- * Get display label for a weather model
- */
-export function getModelLabel(modelId) {
-  return MODEL_LABELS[modelId] ?? modelId;
+export function formatHumidity(value) {
+  return `${Math.round(value)}%`;
+}
+
+export function formatTime(isoString) {
+  const date = new Date(isoString);
+  return date.toLocaleTimeString('nl-NL', { hour: '2-digit', minute: '2-digit' });
+}
+
+export function formatDate(isoString) {
+  const date = new Date(isoString);
+  return date.toLocaleDateString('nl-NL', { weekday: 'short', day: 'numeric', month: 'short' });
+}
+
+export function formatDateTime(isoString) {
+  const date = new Date(isoString);
+  return date.toLocaleString('nl-NL', {
+    weekday: 'short',
+    day: 'numeric',
+    month: 'short',
+    hour: '2-digit',
+    minute: '2-digit',
+  });
+}
+
+export function formatDayShort(isoString) {
+  const date = new Date(isoString);
+  return date.toLocaleDateString('nl-NL', { weekday: 'short' });
+}
+
+export function averageValues(values) {
+  if (values.length === 0) return 0;
+  return values.reduce((sum, v) => sum + v, 0) / values.length;
+}
+
+// --- Wind direction ---
+
+const COMPASS_NL = ['N', 'NO', 'O', 'ZO', 'Z', 'ZW', 'W', 'NW'];
+
+/** Convert wind degrees (0-360) to Dutch compass abbreviation */
+export function degreesToCompass(degrees) {
+  return COMPASS_NL[Math.round(degrees / 45) % 8];
+}
+
+// --- UV index ---
+
+/** UV advice for skin type II-III (common in NL) */
+export function formatUvAdvice(uvIndex) {
+  if (uvIndex < 1) return { label: 'UV 0', advice: 'Geen bescherming nodig' };
+  if (uvIndex <= 2) return { label: `UV ${Math.round(uvIndex)}`, advice: 'Geen bescherming nodig' };
+
+  const burnTime = Math.round(200 / uvIndex);
+
+  if (uvIndex <= 5) return { label: `UV ${Math.round(uvIndex)}`, advice: 'Insmeren bij langdurig buiten', burnTime };
+  if (uvIndex <= 7) return { label: `UV ${Math.round(uvIndex)}`, advice: 'Zeker insmeren!', burnTime };
+  return { label: `UV ${Math.round(uvIndex)}`, advice: 'Vermijd de zon tussen 12\u201315u', burnTime };
+}
+
+// --- Air quality ---
+
+/** European AQI -> Dutch label + sport advice */
+export function formatAirQuality(aqi) {
+  if (aqi <= 20) return { label: 'Uitstekend', sport: 'Ideaal om buiten te sporten', level: 'goed' };
+  if (aqi <= 40) return { label: 'Goed', sport: 'Geschikt om buiten te sporten', level: 'goed' };
+  if (aqi <= 60) return { label: 'Redelijk', sport: 'Geschikt om buiten te sporten', level: 'redelijk' };
+  if (aqi <= 80) return { label: 'Matig', sport: 'Beperk intensief sporten buiten', level: 'matig' };
+  if (aqi <= 100) return { label: 'Slecht', sport: 'Vermijd intensief sporten buiten', level: 'slecht' };
+  return { label: 'Zeer slecht', sport: 'Niet buiten sporten', level: 'zeer_slecht' };
 }
