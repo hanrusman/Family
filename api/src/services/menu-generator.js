@@ -3,48 +3,54 @@ const { getDb } = require('../models/database');
 const { generatePantryCheck } = require('./shopping-generator');
 const { logger } = require('./logger');
 
+// Lenient schemas — most fields optional for easier import
 const IngredientSchema = z.object({
   name: z.string(),
-  amount: z.string(),
-  unit: z.string(),
-  product_group: z.string(),
-});
+  amount: z.string().optional().default(''),
+  unit: z.string().optional().default(''),
+  product_group: z.string().optional().default('overig'),
+}).passthrough();
 
 const RecipeSchema = z.object({
-  ingredients: z.array(IngredientSchema),
-  steps: z.array(z.string()),
+  ingredients: z.array(IngredientSchema).optional().default([]),
+  steps: z.array(z.string()).optional().default([]),
   nutrition_per_serving: z.object({
-    calories: z.number(),
-    protein_g: z.number(),
-    fiber_g: z.number(),
-    iron_mg: z.number(),
-  }),
+    calories: z.number().optional().default(0),
+    protein_g: z.number().optional().default(0),
+    fiber_g: z.number().optional().default(0),
+    iron_mg: z.number().optional().default(0),
+  }).optional().default({}),
   tip: z.string().optional(),
-});
+}).passthrough();
 
 const DaySchema = z.object({
   day_name: z.string(),
   recipe_name: z.string(),
-  recipe_data: RecipeSchema,
-  meal_type: z.string(),
-  prep_time_minutes: z.number(),
-  cost_index: z.string(),
-});
+  recipe_data: RecipeSchema.optional().default({}),
+  meal_type: z.string().optional().default('dinner'),
+  prep_time_minutes: z.number().optional().default(30),
+  cost_index: z.string().optional().default('€€'),
+}).passthrough();
+
+const ShoppingItemSchema = z.object({
+  name: z.string(),
+  quantity: z.string().optional().default(''),
+  for_days: z.array(z.string()).optional().default([]),
+  is_perishable: z.boolean().optional().default(false),
+  storage_tip: z.string().optional(),
+}).passthrough();
+
+const ShoppingGroupSchema = z.object({
+  product_group: z.string(),
+  items: z.array(ShoppingItemSchema),
+}).passthrough();
 
 const MenuImportSchema = z.object({
   days: z.array(DaySchema).min(1).max(7),
-  shopping_list: z.array(z.object({
-    product_group: z.string(),
-    items: z.array(z.object({
-      name: z.string(),
-      quantity: z.string(),
-      for_days: z.array(z.string()),
-      is_perishable: z.boolean().optional(),
-      storage_tip: z.string().optional(),
-    })),
-  })).optional(),
+  shopping_list: z.array(ShoppingGroupSchema).optional(),
   snack_suggestions: z.array(z.string()).optional(),
-});
+  // Allow extra top-level fields (groenten_per_dag, opmerking, etc.)
+}).passthrough();
 
 /**
  * Get ISO week number for a date.
@@ -59,19 +65,14 @@ function getISOWeek(date) {
 
 /**
  * Get the target week number for a menu import.
- * Menu runs Wed-Mon. If importing on Sat-Tue, target the upcoming Wednesday's week.
- * If importing on Wed-Fri, target current week.
  */
 function getTargetWeek(date) {
-  const day = date.getDay(); // 0=Sun, 1=Mon, ..., 6=Sat
-
-  // Wed=3, Thu=4, Fri=5 -> current week (the menu already started)
-  // Sat=6, Sun=0, Mon=1, Tue=2 -> next Wednesday's week
+  const day = date.getDay();
   const daysUntilWed = day <= 2
-    ? 3 - day             // Sun=3, Mon=2, Tue=1
+    ? 3 - day
     : day <= 5
-      ? 0                 // Wed-Fri: 0 (current week)
-      : 4;                // Sat: 4 days until next Wed
+      ? 0
+      : 4;
 
   const targetDate = new Date(date);
   targetDate.setDate(targetDate.getDate() + daysUntilWed);
@@ -84,8 +85,6 @@ function getTargetWeek(date) {
 
 /**
  * Import a menu from JSON data.
- * Validates with zod, creates menu + days + shopping items in a transaction.
- * Archives any currently active menu.
  */
 function importMenu(jsonData, weekNumber, year) {
   const parsed = MenuImportSchema.parse(jsonData);
@@ -125,10 +124,10 @@ function importMenu(jsonData, weekNumber, year) {
         i,
         day.day_name,
         day.recipe_name,
-        JSON.stringify(day.recipe_data),
-        day.meal_type,
-        day.prep_time_minutes,
-        day.cost_index,
+        JSON.stringify(day.recipe_data || {}),
+        day.meal_type || 'dinner',
+        day.prep_time_minutes || 30,
+        day.cost_index || '€€',
       );
     }
 
@@ -145,8 +144,8 @@ function importMenu(jsonData, weekNumber, year) {
             menuId,
             group.product_group,
             item.name,
-            item.quantity,
-            JSON.stringify(item.for_days),
+            item.quantity || '',
+            JSON.stringify(item.for_days || []),
             item.is_perishable ? 1 : 0,
             item.storage_tip || null,
           );

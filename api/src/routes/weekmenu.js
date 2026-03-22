@@ -116,7 +116,12 @@ router.post('/import', authMiddleware, (req, res) => {
     res.json({ ...menu, days });
   } catch (err) {
     logger.error('Menu import mislukt:', err);
-    res.status(400).json({ error: 'Menu import mislukt', details: err.message });
+    // Zod validation errors have a nice format
+    if (err.name === 'ZodError') {
+      const issues = err.issues.map((i) => `${i.path.join('.')}: ${i.message}`).join('; ');
+      return res.status(400).json({ error: `Validatie mislukt: ${issues}` });
+    }
+    res.status(400).json({ error: err.message || 'Menu import mislukt' });
   }
 });
 
