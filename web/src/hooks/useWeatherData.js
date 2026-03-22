@@ -20,7 +20,7 @@ export function useAppConfig() {
   const [config, setConfig] = useState(null);
 
   useEffect(() => {
-    fetchJson('/api/weather/config').then(setConfig).catch(console.error);
+    fetchJson('/api/weather').then(setConfig).catch(console.error);
   }, []);
 
   return config;

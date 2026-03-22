@@ -56,9 +56,9 @@ async function fetchAirQuality(lat, lon) {
 
     // Find current hour's index
     const now = new Date();
-    const currentHour = new Date(
-      now.getFullYear(), now.getMonth(), now.getDate(), now.getHours()
-    ).toISOString().slice(0, 16);
+    // Format as local time to match Open-Meteo's Europe/Amsterdam times
+    const pad = (n) => String(n).padStart(2, '0');
+    const currentHour = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}T${pad(now.getHours())}:00`;
 
     const idx = (data.hourly.time || []).findIndex((t) => t === currentHour);
     const i = idx >= 0 ? idx : 0;

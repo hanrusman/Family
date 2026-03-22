@@ -62,7 +62,7 @@ export default function WeatherPage() {
               />
               {selectedLocation && (
                 <p style={{ color: 'var(--color-text-tertiary)', fontSize: 'var(--text-sm)', marginTop: '2px' }}>
-                  {selectedLocation.latitude.toFixed(2)}\u00b0N, {selectedLocation.longitude.toFixed(2)}\u00b0E
+                  {selectedLocation.latitude.toFixed(2)}°N, {selectedLocation.longitude.toFixed(2)}°E
                 </p>
               )}
             </div>
