@@ -114,10 +114,44 @@ export default function SettingsPage() {
     }
   };
 
+  // Demo data management
+  const [demoPin, setDemoPin] = useState('');
+  const [demoMsg, setDemoMsg] = useState('');
+  const [demoLoading, setDemoLoading] = useState('');
+
+  const seedDemo = async () => {
+    if (!demoPin) { setDemoMsg('Voer je PIN in'); return; }
+    setDemoLoading('seed');
+    try {
+      const result = await api.post('/settings/seed-demo', { pin: demoPin });
+      setDemoMsg(result.message || 'Demodata aangemaakt!');
+      setDemoPin('');
+      loadFamily();
+    } catch (err) {
+      setDemoMsg(err.message);
+    }
+    setDemoLoading('');
+  };
+
+  const clearAllData = async () => {
+    if (!demoPin) { setDemoMsg('Voer je PIN in'); return; }
+    if (!confirm('⚠️ ALLE data wordt verwijderd! Gezinsleden, events, klusjes, maaltijden, boodschappen — alles. Weet je het zeker?')) return;
+    setDemoLoading('clear');
+    try {
+      const result = await api.post('/settings/clear-data', { pin: demoPin });
+      setDemoMsg(result.message || 'Alle data verwijderd!');
+      setDemoPin('');
+      loadFamily();
+    } catch (err) {
+      setDemoMsg(err.message);
+    }
+    setDemoLoading('');
+  };
+
   return (
     <div className="settings-page">
       <header className="settings-header">
-        <h2>Instellingen</h2>
+        <h2>Papa & Mama</h2>
         <button className="btn btn-secondary btn-sm" onClick={logout}>Uitloggen</button>
       </header>
 
@@ -368,6 +402,50 @@ export default function SettingsPage() {
         <section className="settings-section">
           <h3>Beveiliging</h3>
           <PinChanger />
+        </section>
+
+        {/* Demo Data */}
+        <section className="settings-section">
+          <h3>🧪 Demo & Data</h3>
+          <p className="text-sm text-secondary mb-2">
+            Vul de app met voorbeelddata om te testen, of wis alle data om opnieuw te beginnen.
+          </p>
+
+          <div className="form-group" style={{ marginBottom: '0.75rem' }}>
+            <label className="form-label">PIN (beveiligingscheck)</label>
+            <input
+              className="input"
+              type="password"
+              placeholder="Voer je PIN in"
+              value={demoPin}
+              onChange={(e) => setDemoPin(e.target.value)}
+            />
+          </div>
+
+          <div className="flex gap-2" style={{ flexWrap: 'wrap' }}>
+            <button
+              className="btn btn-primary btn-sm"
+              onClick={seedDemo}
+              disabled={!!demoLoading}
+            >
+              {demoLoading === 'seed' ? 'Bezig...' : '🎭 Demodata aanmaken'}
+            </button>
+            <button
+              className="btn btn-danger btn-sm"
+              onClick={clearAllData}
+              disabled={!!demoLoading}
+            >
+              {demoLoading === 'clear' ? 'Bezig...' : '🗑️ Alle data wissen'}
+            </button>
+          </div>
+
+          {demoMsg && (
+            <p className="text-sm mt-2" style={{
+              color: demoMsg.includes('aangemaakt') || demoMsg.includes('verwijderd') ? 'var(--success)' : 'var(--danger)'
+            }}>
+              {demoMsg}
+            </p>
+          )}
         </section>
 
         {/* Kiosk Info */}
