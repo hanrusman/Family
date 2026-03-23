@@ -102,7 +102,7 @@ export default function MultiModelChart({ forecast, enabledModels, allModels, is
     });
 
     return (
-      <div style={{ background: 'var(--color-surface-3)', border: '1px solid var(--color-border-emphasis)', borderRadius: 'var(--radius-md)', padding: 'var(--space-md)', boxShadow: '0 8px 32px rgba(0,0,0,0.5)' }}>
+      <div style={{ background: 'var(--color-surface-3)', border: '1px solid var(--color-border-emphasis)', borderRadius: 'var(--radius-md)', padding: 'var(--space-md)', boxShadow: '0 8px 32px rgba(0,0,0,0.15)' }}>
         <p style={{ color: 'var(--color-text-tertiary)', fontSize: 'var(--text-xs)', marginBottom: 'var(--space-sm)' }}>{timeStr}</p>
         {payload
           .filter((p) => !p.dataKey.startsWith('_'))
@@ -123,10 +123,11 @@ export default function MultiModelChart({ forecast, enabledModels, allModels, is
 
   const yDomain = variable === 'precipitation' ? [0, 100] : undefined;
 
-  // Chart grid/axis colors from design tokens
-  const gridColor = 'rgba(255,255,255,0.04)';
-  const axisColor = 'rgba(255,255,255,0.08)';
-  const tickColor = 'rgba(255,255,255,0.32)';
+  // Chart grid/axis colors — use CSS variable-compatible values
+  const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+  const gridColor = isDark ? 'rgba(255,255,255,0.04)' : 'rgba(38,70,83,0.06)';
+  const axisColor = isDark ? 'rgba(255,255,255,0.08)' : 'rgba(38,70,83,0.1)';
+  const tickColor = isDark ? 'rgba(255,255,255,0.32)' : 'rgba(38,70,83,0.5)';
 
   return (
     <div className="card">
@@ -233,7 +234,7 @@ export default function MultiModelChart({ forecast, enabledModels, allModels, is
               <Line
                 type="monotone"
                 dataKey="_avg"
-                stroke="rgba(255,255,255,0.2)"
+                stroke={isDark ? 'rgba(255,255,255,0.2)' : 'rgba(38,70,83,0.15)'}
                 strokeWidth={1}
                 strokeDasharray="4 4"
                 dot={false}

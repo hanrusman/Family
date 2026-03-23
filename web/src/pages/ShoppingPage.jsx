@@ -50,7 +50,6 @@ export default function ShoppingPage() {
     const newQty = currentQty + delta;
 
     if (newQty < 1) {
-      // Verwijder item
       try {
         await api.delete(`/shopping/${item.id}`);
         fetchItems();
@@ -62,7 +61,6 @@ export default function ShoppingPage() {
 
     try {
       await api.patch(`/shopping/${item.id}`, { quantity: String(newQty) });
-      // Optimistic update
       setData((prev) => ({
         ...prev,
         items: prev.items.map((i) => i.id === item.id ? { ...i, quantity: String(newQty) } : i),
@@ -99,22 +97,22 @@ export default function ShoppingPage() {
   const checkedCount = data.items.filter((i) => i.checked).length;
 
   return (
-    <div className="flex flex-col h-full bg-[var(--bg-primary)]">
+    <div className="flex flex-col h-full">
       {/* Header */}
-      <header className="w-full px-8 py-6 shrink-0">
-        <div className="max-w-3xl mx-auto flex flex-wrap justify-between items-center gap-4">
-          <div>
-            <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight text-[var(--text-primary)]">
-              Boodschappen 🛒
-            </h1>
-            <p className="text-[var(--text-secondary)] text-lg font-medium mt-1">
-              {uncheckedCount} items op de lijst
-            </p>
-          </div>
-          <div className="flex items-center gap-3">
+      <header className="px-5 sm:px-8 pt-6 pb-4 shrink-0">
+        <div className="max-w-2xl mx-auto">
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-[var(--text-primary)]">
+                Boodschappen 🛒
+              </h1>
+              <p className="text-[var(--text-muted)] text-sm mt-0.5">
+                {uncheckedCount} {uncheckedCount === 1 ? 'item' : 'items'} op de lijst
+              </p>
+            </div>
             {checkedCount > 0 && (
               <button
-                className="bg-[var(--bg-card)] px-5 py-2.5 rounded-full shadow-soft font-bold text-[var(--text-primary)] text-sm border border-[var(--border-color)] hover:bg-[var(--bg-hover)] transition-colors active:scale-95"
+                className="bg-[var(--bg-card)] px-4 py-2 rounded-full text-sm font-semibold text-[var(--text-primary)] border border-[var(--border-color)] hover:bg-[var(--bg-hover)] transition-colors active:scale-95"
                 onClick={clearChecked}
               >
                 Opruimen ({checkedCount})
@@ -126,17 +124,17 @@ export default function ShoppingPage() {
 
       {/* Add item form */}
       {!isTabletMode && (
-        <div className="px-8 pb-4">
-          <form className="max-w-3xl mx-auto flex gap-3" onSubmit={addItem}>
+        <div className="px-5 sm:px-8 pb-3">
+          <form className="max-w-2xl mx-auto flex gap-2" onSubmit={addItem}>
             <input
-              className="flex-1 px-5 py-3 bg-[var(--bg-input)] rounded-full border border-[var(--border-color)] shadow-soft text-lg font-medium text-[var(--text-primary)] placeholder:text-[var(--text-muted)] focus:outline-none focus:border-primary transition-colors"
+              className="flex-1 px-4 py-2.5 bg-[var(--bg-card)] rounded-xl border border-[var(--border-color)] text-base text-[var(--text-primary)] placeholder:text-[var(--text-muted)] focus:outline-none focus:border-[var(--accent)]"
               value={newItem}
               onChange={(e) => setNewItem(e.target.value)}
-              placeholder="Item toevoegen (komma's voor meerdere)"
+              placeholder="Toevoegen (komma's voor meerdere)"
             />
             <button
               type="submit"
-              className="w-12 h-12 bg-primary text-white rounded-full shadow-soft flex items-center justify-center text-2xl font-bold hover:bg-primary/90 transition-colors active:scale-95"
+              className="w-11 h-11 bg-[var(--accent)] text-white rounded-xl flex items-center justify-center text-xl font-bold hover:opacity-90 transition-all active:scale-95 shrink-0"
             >
               +
             </button>
@@ -144,87 +142,84 @@ export default function ShoppingPage() {
         </div>
       )}
 
-      {/* Shopping content */}
-      <div className="flex-1 overflow-y-auto px-8 pb-32">
-        <div className="max-w-3xl mx-auto flex flex-col gap-6 pt-2">
+      {/* Shopping list */}
+      <div className="flex-1 overflow-y-auto px-5 sm:px-8 pb-32">
+        <div className="max-w-2xl mx-auto flex flex-col gap-5 pt-1">
           {data.grouped.length === 0 ? (
             <div className="flex items-center justify-center py-16">
-              <p className="text-[var(--text-muted)] text-lg font-medium">Boodschappenlijst is leeg</p>
+              <p className="text-[var(--text-muted)] text-base">Boodschappenlijst is leeg</p>
             </div>
           ) : (
             data.grouped.map((group) => (
               <div key={group.category}>
                 {/* Category header */}
-                <div className="flex items-center gap-2 mb-3">
-                  <span className="text-xl">{CATEGORY_EMOJI[group.category] || '🛒'}</span>
-                  <span className="text-sm font-bold text-[var(--text-muted)] uppercase tracking-wider">
+                <div className="flex items-center gap-2 mb-2 px-1">
+                  <span className="text-lg">{CATEGORY_EMOJI[group.category] || '🛒'}</span>
+                  <span className="text-xs font-bold text-[var(--text-muted)] uppercase tracking-wider">
                     {group.label}
                   </span>
-                  <span className="text-xs text-[var(--text-muted)] font-medium">{group.items.length}</span>
+                  <span className="text-xs text-[var(--text-muted)]">{group.items.length}</span>
                 </div>
 
                 {/* Items */}
-                <div className="flex flex-col gap-2">
+                <div className="flex flex-col gap-1.5">
                   {group.items.map((item) => {
                     const qty = parseInt(item.quantity) || 1;
                     return (
                       <div
                         key={item.id}
-                        className={`w-full flex items-center gap-3 bg-[var(--bg-card)] rounded-lg p-3 transition-all border ${
+                        className={`flex items-center gap-3 bg-[var(--bg-card)] rounded-xl px-4 py-3 transition-all border ${
                           item.checked
-                            ? 'border-success/30 opacity-50'
+                            ? 'border-[var(--success)]/20 opacity-50'
                             : 'border-[var(--border-color)]'
                         }`}
                       >
                         {/* Checkbox */}
                         <button
                           onClick={() => toggleItem(item.id)}
-                          className={`w-7 h-7 rounded-lg border-2 flex items-center justify-center shrink-0 transition-all ${
+                          className={`w-6 h-6 rounded-md border-2 flex items-center justify-center shrink-0 transition-all ${
                             item.checked
-                              ? 'bg-success border-success text-white'
-                              : 'border-[var(--border-color)] bg-[var(--bg-card)] hover:border-primary'
+                              ? 'bg-[var(--success)] border-[var(--success)] text-white'
+                              : 'border-[var(--border-color)] hover:border-[var(--accent)]'
                           }`}
                         >
-                          {item.checked && <span className="text-sm font-bold">✓</span>}
+                          {item.checked && <span className="text-xs font-bold">✓</span>}
                         </button>
 
-                        {/* Item name */}
+                        {/* Item name + optional quantity display */}
                         <span
-                          className={`text-lg font-bold flex-1 ${
+                          className={`text-base font-medium flex-1 min-w-0 truncate ${
                             item.checked
                               ? 'line-through text-[var(--text-muted)]'
                               : 'text-[var(--text-primary)]'
                           }`}
                         >
                           {item.name}
+                          {qty > 1 && !item.checked && (
+                            <span className="text-[var(--text-muted)] text-sm ml-1">
+                              ({qty}×)
+                            </span>
+                          )}
                         </span>
 
-                        {/* Quantity controls */}
+                        {/* Quantity controls — only for unchecked items */}
                         {!item.checked && (
-                          <div className="flex items-center gap-1 shrink-0">
+                          <div className="flex items-center gap-0.5 shrink-0">
                             <button
                               onClick={() => updateQuantity(item, -1)}
-                              className="w-8 h-8 rounded-full bg-[var(--bg-tertiary,var(--bg-hover))] text-[var(--text-secondary)] hover:bg-[var(--bg-hover)] flex items-center justify-center font-bold text-lg transition-colors active:scale-90"
+                              className="w-8 h-8 rounded-lg bg-[var(--bg-tertiary)] text-[var(--text-secondary)] hover:bg-[var(--bg-hover)] flex items-center justify-center font-bold transition-colors active:scale-90"
                               title={qty <= 1 ? 'Verwijderen' : 'Minder'}
                             >
                               {qty <= 1 ? '🗑' : '−'}
                             </button>
-                            <span className="w-8 text-center font-bold text-[var(--text-primary)] text-sm tabular-nums">
-                              {qty}
-                            </span>
                             <button
                               onClick={() => updateQuantity(item, 1)}
-                              className="w-8 h-8 rounded-full bg-primary/15 text-primary hover:bg-primary/25 flex items-center justify-center font-bold text-lg transition-colors active:scale-90"
+                              className="w-8 h-8 rounded-lg bg-[var(--accent)]/10 text-[var(--accent)] hover:bg-[var(--accent)]/20 flex items-center justify-center font-bold transition-colors active:scale-90"
                               title="Meer"
                             >
                               +
                             </button>
                           </div>
-                        )}
-
-                        {/* Show quantity for checked items */}
-                        {item.checked && qty > 1 && (
-                          <span className="text-sm font-medium text-[var(--text-muted)]">×{qty}</span>
                         )}
                       </div>
                     );
@@ -236,17 +231,12 @@ export default function ShoppingPage() {
 
           {/* Toggle checked items */}
           {checkedCount > 0 && (
-            <label className="flex items-center justify-center gap-3 py-4 cursor-pointer">
-              <input
-                type="checkbox"
-                checked={showChecked}
-                onChange={(e) => setShowChecked(e.target.checked)}
-                className="w-5 h-5 rounded border-[var(--border-color)] text-primary focus:ring-primary"
-              />
-              <span className="text-[var(--text-secondary)] font-medium">
-                Toon afgevinkte items
-              </span>
-            </label>
+            <button
+              onClick={() => setShowChecked(!showChecked)}
+              className="text-[var(--text-secondary)] text-sm font-medium py-3 hover:text-[var(--text-primary)] transition-colors"
+            >
+              {showChecked ? 'Verberg' : 'Toon'} afgevinkte items ({checkedCount})
+            </button>
           )}
         </div>
       </div>

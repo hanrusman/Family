@@ -98,23 +98,21 @@ export default function ChoresPage() {
   return (
     <div className="flex flex-col h-full bg-[var(--bg-primary)]">
       {/* Header */}
-      <header className="px-8 pt-8 pb-6">
+      <header className="px-5 sm:px-8 pt-6 pb-4">
         <div className="flex items-center justify-between mb-1">
-          <h1 className="text-4xl font-bold text-[var(--text-primary)] font-display">
-            Klusjes
+          <h1 className="text-2xl sm:text-3xl font-bold text-[var(--text-primary)]">
+            Klusjes 🧹
           </h1>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2">
             {totalPoints > 0 && (
-              <div className="bg-primary/20 text-primary font-bold px-4 py-2 rounded-full text-sm flex items-center gap-2">
-                <span>Familie Punten:</span>
-                <span className="bg-primary text-white px-3 py-0.5 rounded-full text-sm">
-                  {totalPoints}
-                </span>
+              <div className="bg-[var(--accent)]/15 text-[var(--accent)] font-bold px-3 py-1.5 rounded-full text-xs sm:text-sm flex items-center gap-1.5">
+                <span>⭐</span>
+                <span>{totalPoints}</span>
               </div>
             )}
             {!isTabletMode && (
               <button
-                className="bg-primary hover:bg-primary/90 text-white font-bold px-5 py-2 rounded-full text-sm transition-all"
+                className="bg-[var(--accent)] hover:opacity-90 text-white font-bold px-4 py-2 rounded-full text-sm transition-all active:scale-95"
                 onClick={() => setShowModal(true)}
               >
                 + Klusje
@@ -122,7 +120,7 @@ export default function ChoresPage() {
             )}
           </div>
         </div>
-        <p className="text-[var(--text-muted)] text-sm mb-5">
+        <p className="text-[var(--text-muted)] text-sm mb-4">
           Wie heeft de meeste punten vandaag?
         </p>
 
@@ -150,7 +148,7 @@ export default function ChoresPage() {
       </header>
 
       {/* Scrollable member columns */}
-      <div className="flex-1 overflow-x-auto hide-scrollbar px-8 pb-32">
+      <div className="flex-1 overflow-x-auto hide-scrollbar px-5 sm:px-8 pb-8">
         {totalCount === 0 ? (
           <div className="flex flex-col items-center justify-center py-20">
             <span className="text-6xl mb-4">🧹</span>

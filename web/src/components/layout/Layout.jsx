@@ -33,26 +33,26 @@ export default function Layout({ children }) {
   const navItems = isTabletMode ? NAV_ITEMS : [...NAV_ITEMS, SETTINGS_ITEM];
 
   return (
-    <div className="h-screen flex flex-col bg-[var(--bg-primary)] font-display">
-      {/* Dark mode toggle - fixed top right */}
+    <div className="h-screen flex flex-col bg-[var(--bg-primary)]">
+      {/* Dark mode toggle */}
       <button
         onClick={() => setDark(!dark)}
-        className="fixed top-4 right-4 z-40 w-10 h-10 rounded-full bg-[var(--bg-card)] shadow-soft flex items-center justify-center text-lg hover:scale-110 transition-transform border border-[var(--border-color)]"
+        className="fixed top-3 right-3 z-40 w-9 h-9 rounded-full bg-[var(--bg-card)] flex items-center justify-center text-base hover:scale-110 transition-transform border border-[var(--border-color)]"
+        style={{ boxShadow: '0 2px 8px rgba(0,0,0,0.08)' }}
         aria-label={dark ? 'Schakel naar licht thema' : 'Schakel naar donker thema'}
       >
         {dark ? '☀️' : '🌙'}
       </button>
 
       {/* Main content */}
-      <main className="flex-1 overflow-y-auto overflow-x-hidden pb-32" style={{ WebkitOverflowScrolling: 'touch' }}>
+      <main className="flex-1 overflow-y-auto overflow-x-hidden pb-24" style={{ WebkitOverflowScrolling: 'touch' }}>
         {children}
       </main>
 
       {/* Floating pill navigation */}
       <nav
-        className={`fixed bottom-6 left-1/2 -translate-x-1/2 bg-[var(--bg-card)] rounded-full shadow-[0_20px_40px_rgba(38,70,83,0.15)] p-2 flex gap-2 border border-[var(--border-color)] z-50 ${
-          isTabletMode ? 'nav-pill-tablet' : ''
-        }`}
+        className="fixed bottom-4 left-1/2 -translate-x-1/2 bg-[var(--bg-card)] rounded-full p-1.5 sm:p-2 flex gap-0.5 sm:gap-1 border border-[var(--border-color)] z-50 max-w-[95vw]"
+        style={{ boxShadow: '0 8px 32px rgba(38,70,83,0.12)' }}
         role="navigation"
         aria-label="Hoofdnavigatie"
       >
@@ -65,19 +65,19 @@ export default function Layout({ children }) {
               key={item.path}
               onClick={() => navigate(item.path)}
               className={`relative flex flex-col items-center justify-center rounded-full transition-all duration-200
-                w-14 h-14 lg:landscape:w-[72px] lg:landscape:h-[72px]
+                w-11 h-11 sm:w-14 sm:h-14
                 ${
                   isActive
-                    ? 'bg-primary/30 text-primary border border-primary/20'
-                    : 'text-[var(--text-muted)] hover:bg-[var(--bg-hover)] border border-transparent'
+                    ? 'bg-[var(--accent)]/20 text-[var(--accent)]'
+                    : 'text-[var(--text-muted)] hover:bg-[var(--bg-hover)]'
                 }
               `}
               aria-current={isActive ? 'page' : undefined}
             >
-              <span className="text-xl lg:landscape:text-2xl leading-none">{item.icon}</span>
-              <span className="text-[9px] font-medium mt-0.5 leading-none">{item.label}</span>
+              <span className="text-lg sm:text-xl leading-none">{item.icon}</span>
+              <span className="text-[8px] sm:text-[9px] font-medium mt-0.5 leading-none">{item.label}</span>
               {isActive && (
-                <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-primary" />
+                <span className="absolute -bottom-0.5 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-[var(--accent)]" />
               )}
             </button>
           );

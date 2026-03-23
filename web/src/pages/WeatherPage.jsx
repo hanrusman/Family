@@ -35,7 +35,7 @@ export default function WeatherPage() {
   if (forecastLoading && currentLoading) {
     return (
       <div className="weather-page">
-        <div className="min-h-screen flex items-center justify-center">
+        <div className="flex items-center justify-center" style={{ minHeight: '60vh' }}>
           <span style={{ color: 'var(--color-text-tertiary)', fontSize: 'var(--text-lg)' }}>
             Weerdata laden...
           </span>
@@ -46,8 +46,7 @@ export default function WeatherPage() {
 
   return (
     <div className="weather-page">
-      <div className="min-h-screen">
-        <div className="max-w-7xl mx-auto" style={{ padding: 'var(--space-lg)' }}>
+      <div className="max-w-7xl mx-auto" style={{ padding: 'var(--space-lg)', paddingBottom: '8rem' }}>
           {/* Header */}
           <header className="flex items-center justify-between" style={{ marginBottom: 'var(--space-xl)' }}>
             <div>
@@ -131,7 +130,6 @@ export default function WeatherPage() {
           <footer className="text-center" style={{ marginTop: 'var(--space-2xl)', paddingTop: 'var(--space-lg)', borderTop: '1px solid var(--color-border)', color: 'var(--color-text-tertiary)', fontSize: 'var(--text-xs)' }}>
             Data: Open-Meteo (CC-BY-4.0) &middot; KNMI (CC-BY-4.0) &middot; Stookwijzer
           </footer>
-        </div>
       </div>
     </div>
   );
