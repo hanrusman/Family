@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import '../common/Modal.css';
 
-const ICONS = ['📋', '🧹', '🍽️', '🛏️', '📚', '🐕', '🗑️', '🧺', '🪥', '🎒', '🚿', '✏️'];
+const ICONS = ['📋', '🧹', '🍽️', '🛏️', '📚', '🐕', '🗑️', '🧺', '🪥', '🎒', '🚿', '✏️', '🪴', '🚲', '🐱', '🧽'];
 const RECURRENCE_OPTIONS = [
   { value: 'daily', label: 'Dagelijks' },
   { value: 'weekly', label: 'Wekelijks' },
@@ -17,16 +17,35 @@ const DAYS = [
   { value: 'sunday', label: 'Zo' },
 ];
 const TIME_OPTIONS = [
-  { value: 'before_school', label: 'Voor school' },
-  { value: 'after_school', label: 'Na school' },
-  { value: 'before_bed', label: 'Voor bedtijd' },
-  { value: 'anytime', label: 'Overdag' },
+  { value: 'before_school', label: '🌅 Voor school' },
+  { value: 'after_school', label: '☀️ Na school' },
+  { value: 'before_bed', label: '🌙 Voor bedtijd' },
+  { value: 'anytime', label: '⚡ Overdag' },
 ];
+
+const ROLE_SUGGESTIONS = {
+  '🍽️': ['Tafelbaas', 'Dekmeester', 'Tafelkoning'],
+  '🧹': ['Veegkampioen', 'Stofvrij-held', 'De Bezembaron'],
+  '🛏️': ['Beddenbaas', 'Dekbedmeester', 'Kamerkapitein'],
+  '📚': ['Boekenwurm', 'Leesbaron', 'Studieheld'],
+  '🐕': ['Dierenverzorger', 'Hondenbaas', 'Wandelkoning'],
+  '🗑️': ['Afvalheld', 'Prullenbakbaas', 'Recycleking'],
+  '🧺': ['Wasmachinebaas', 'Waskapitein', 'Vouwmeester'],
+  '🪥': ['Poetskampioen', 'Tandenbaas'],
+  '🎒': ['Tassenbaas', 'Inpakmeester'],
+  '🚿': ['Badkamerheld', 'Spetterkapitein'],
+  '✏️': ['Huiswerkbaas', 'Studiemeester'],
+  '🧽': ['Afwasheld', 'Vaatwasserbaas', 'Spoelkampioen'],
+  '🪴': ['Plantenbaas', 'Tuinkampioen', 'Groene Vingers'],
+  '🚲': ['Fietsmeester', 'Wielrenner'],
+  '🐱': ['Kattenbaas', 'Poezenverzorger'],
+};
 
 export default function ChoreTemplateModal({ familyMembers, onSave, onClose }) {
   const [form, setForm] = useState({
     title: '',
     icon: '📋',
+    role_title: '',
     member_id: '',
     recurrence: 'daily',
     recurrence_days: '',
@@ -48,9 +67,12 @@ export default function ChoreTemplateModal({ familyMembers, onSave, onClose }) {
     if (!form.title.trim()) return;
     onSave({
       ...form,
+      role_title: form.role_title.trim() || null,
       recurrence_days: form.recurrence === 'specific_days' ? selectedDays.join(',') : null,
     });
   };
+
+  const suggestions = ROLE_SUGGESTIONS[form.icon] || [];
 
   return (
     <div className="modal-overlay" onClick={onClose}>
@@ -63,7 +85,7 @@ export default function ChoreTemplateModal({ familyMembers, onSave, onClose }) {
         <form onSubmit={handleSubmit} className="modal-body">
           <div className="form-group">
             <label className="form-label">Naam</label>
-            <input className="input" value={form.title} onChange={(e) => update('title', e.target.value)} placeholder="Bijv. Kamer opruimen" autoFocus required />
+            <input className="input" value={form.title} onChange={(e) => update('title', e.target.value)} placeholder="Bijv. Tafel dekken" autoFocus required />
           </div>
 
           <div className="form-group">
@@ -83,11 +105,46 @@ export default function ChoreTemplateModal({ familyMembers, onSave, onClose }) {
             </div>
           </div>
 
+          {/* Fun role title */}
+          <div className="form-group">
+            <label className="form-label">
+              Bijnaam <span style={{ color: 'var(--text-muted)', fontWeight: 400 }}>(optioneel — bijv. "Tafelbaas")</span>
+            </label>
+            <input
+              className="input"
+              value={form.role_title}
+              onChange={(e) => update('role_title', e.target.value)}
+              placeholder="Hoe heet deze held?"
+            />
+            {suggestions.length > 0 && (
+              <div className="flex gap-1.5 mt-1.5" style={{ flexWrap: 'wrap' }}>
+                {suggestions.map((s) => (
+                  <button
+                    key={s}
+                    type="button"
+                    className="badge"
+                    style={{
+                      cursor: 'pointer',
+                      background: form.role_title === s ? 'var(--accent)' : 'var(--bg-tertiary)',
+                      color: form.role_title === s ? 'white' : 'var(--text-secondary)',
+                      border: 'none',
+                      fontSize: '0.75rem',
+                      padding: '0.25rem 0.6rem',
+                    }}
+                    onClick={() => update('role_title', s)}
+                  >
+                    {s}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+
           <div className="form-group">
             <label className="form-label">Toegewezen aan</label>
             <select className="select" value={form.member_id} onChange={(e) => update('member_id', e.target.value)}>
               <option value="">— Niet toegewezen —</option>
-              {familyMembers.filter((m) => m.role === 'child').map((m) => (
+              {familyMembers.map((m) => (
                 <option key={m.id} value={m.id}>{m.name}</option>
               ))}
             </select>
@@ -130,7 +187,7 @@ export default function ChoreTemplateModal({ familyMembers, onSave, onClose }) {
           </div>
 
           <div className="form-group">
-            <label className="form-label">Punten (sterren)</label>
+            <label className="form-label">Sterren</label>
             <div className="flex gap-2">
               {[1, 2, 3, 4, 5].map((p) => (
                 <button

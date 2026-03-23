@@ -15,6 +15,7 @@ function initDatabase(dbPath) {
   db.pragma('foreign_keys = ON');
 
   createTables();
+  migrateSchema();
   seedDefaults();
 
   return db;
@@ -62,6 +63,7 @@ function createTables() {
       id TEXT PRIMARY KEY,
       title TEXT NOT NULL,
       icon TEXT DEFAULT '📋',
+      role_title TEXT,
       member_id TEXT,
       recurrence TEXT NOT NULL DEFAULT 'daily',
       recurrence_days TEXT,
@@ -220,6 +222,14 @@ function createTables() {
     CREATE INDEX IF NOT EXISTS idx_wmenu_shopping_menu ON weekmenu_shopping_items(menu_id);
     CREATE INDEX IF NOT EXISTS idx_pantry_menu ON pantry_check(menu_id);
   `);
+}
+
+function migrateSchema() {
+  // Add role_title column to chore_templates if it doesn't exist
+  const cols = db.prepare("PRAGMA table_info(chore_templates)").all();
+  if (!cols.find(c => c.name === 'role_title')) {
+    db.exec("ALTER TABLE chore_templates ADD COLUMN role_title TEXT");
+  }
 }
 
 function seedDefaults() {

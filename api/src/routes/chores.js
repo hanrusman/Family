@@ -13,11 +13,10 @@ function getChores(req, res) {
     let query, params;
 
     if (week) {
-      // Get week overview
       const startDate = targetDate;
       const endDate = new Date(new Date(targetDate).getTime() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
       query = `
-        SELECT ci.*, ct.title, ct.icon, ct.member_id, ct.time_of_day, ct.points,
+        SELECT ci.*, ct.title, ct.icon, ct.role_title, ct.member_id, ct.time_of_day, ct.points,
                fm.name as member_name, fm.color as member_color
         FROM chore_instances ci
         JOIN chore_templates ct ON ci.template_id = ct.id
@@ -27,7 +26,7 @@ function getChores(req, res) {
       params = [startDate, endDate];
     } else {
       query = `
-        SELECT ci.*, ct.title, ct.icon, ct.member_id, ct.time_of_day, ct.points,
+        SELECT ci.*, ct.title, ct.icon, ct.role_title, ct.member_id, ct.time_of_day, ct.points,
                fm.name as member_name, fm.color as member_color
         FROM chore_instances ci
         JOIN chore_templates ct ON ci.template_id = ct.id
@@ -77,7 +76,7 @@ function toggleChore(req, res) {
     );
 
     const updated = db.prepare(`
-      SELECT ci.*, ct.title, ct.icon, ct.member_id, ct.time_of_day, ct.points,
+      SELECT ci.*, ct.title, ct.icon, ct.role_title, ct.member_id, ct.time_of_day, ct.points,
              fm.name as member_name, fm.color as member_color
       FROM chore_instances ci
       JOIN chore_templates ct ON ci.template_id = ct.id
@@ -86,6 +85,58 @@ function toggleChore(req, res) {
     `).get(req.params.id);
 
     res.json(updated);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+}
+
+// GET /api/chores/streaks - Bereken dagstreaks per gezinslid
+function getStreaks(req, res) {
+  try {
+    const db = getDb();
+    const today = new Date().toISOString().split('T')[0];
+
+    const members = db.prepare(`
+      SELECT DISTINCT ct.member_id, fm.name as member_name
+      FROM chore_templates ct
+      JOIN family_members fm ON ct.member_id = fm.id
+    `).all();
+
+    const streaks = {};
+    for (const member of members) {
+      let streak = 0;
+      let checkDate = new Date(today);
+
+      for (let i = 0; i < 365; i++) {
+        const dateStr = checkDate.toISOString().split('T')[0];
+        const dayStats = db.prepare(`
+          SELECT COUNT(*) as total, SUM(ci.completed) as completed
+          FROM chore_instances ci
+          JOIN chore_templates ct ON ci.template_id = ct.id
+          WHERE ci.date = ? AND ct.member_id = ?
+        `).get(dateStr, member.member_id);
+
+        if (!dayStats || dayStats.total === 0) {
+          checkDate.setDate(checkDate.getDate() - 1);
+          continue;
+        }
+
+        if (dayStats.completed === dayStats.total) {
+          streak++;
+          checkDate.setDate(checkDate.getDate() - 1);
+        } else {
+          if (i === 0) {
+            checkDate.setDate(checkDate.getDate() - 1);
+            continue;
+          }
+          break;
+        }
+      }
+
+      streaks[member.member_id] = streak;
+    }
+
+    res.json(streaks);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -111,7 +162,7 @@ router.get('/templates', (req, res) => {
 router.post('/templates', (req, res) => {
   try {
     const db = getDb();
-    const { title, icon, member_id, recurrence, recurrence_days, time_of_day, points } = req.body;
+    const { title, icon, role_title, member_id, recurrence, recurrence_days, time_of_day, points } = req.body;
 
     if (!title) {
       return res.status(400).json({ error: 'Titel is vereist' });
@@ -119,9 +170,9 @@ router.post('/templates', (req, res) => {
 
     const id = uuidv4();
     db.prepare(`
-      INSERT INTO chore_templates (id, title, icon, member_id, recurrence, recurrence_days, time_of_day, points)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-    `).run(id, title, icon || '📋', member_id || null, recurrence || 'daily', recurrence_days || null, time_of_day || 'anytime', points || 1);
+      INSERT INTO chore_templates (id, title, icon, role_title, member_id, recurrence, recurrence_days, time_of_day, points)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `).run(id, title, icon || '📋', role_title || null, member_id || null, recurrence || 'daily', recurrence_days || null, time_of_day || 'anytime', points || 1);
 
     const template = db.prepare('SELECT * FROM chore_templates WHERE id = ?').get(id);
     res.status(201).json(template);
@@ -134,7 +185,7 @@ router.post('/templates', (req, res) => {
 router.put('/templates/:id', (req, res) => {
   try {
     const db = getDb();
-    const { title, icon, member_id, recurrence, recurrence_days, time_of_day, points } = req.body;
+    const { title, icon, role_title, member_id, recurrence, recurrence_days, time_of_day, points } = req.body;
 
     const existing = db.prepare('SELECT * FROM chore_templates WHERE id = ?').get(req.params.id);
     if (!existing) {
@@ -142,11 +193,12 @@ router.put('/templates/:id', (req, res) => {
     }
 
     db.prepare(`
-      UPDATE chore_templates SET title = ?, icon = ?, member_id = ?, recurrence = ?, recurrence_days = ?, time_of_day = ?, points = ?
+      UPDATE chore_templates SET title = ?, icon = ?, role_title = ?, member_id = ?, recurrence = ?, recurrence_days = ?, time_of_day = ?, points = ?
       WHERE id = ?
     `).run(
       title || existing.title,
       icon || existing.icon,
+      role_title !== undefined ? role_title : existing.role_title,
       member_id !== undefined ? member_id : existing.member_id,
       recurrence || existing.recurrence,
       recurrence_days !== undefined ? recurrence_days : existing.recurrence_days,
@@ -209,7 +261,8 @@ router.get('/stats', (req, res) => {
   }
 });
 
+router.get('/streaks', getStreaks);
 router.get('/', getChores);
 router.patch('/:id/toggle', toggleChore);
 
-module.exports = { router, getChores, toggleChore };
+module.exports = { router, getChores, toggleChore, getStreaks };

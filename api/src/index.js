@@ -53,6 +53,8 @@ app.get('/api/tablet/chores', optionalAuth, (req, res, next) => {
 
 app.patch('/api/tablet/chores/:id/toggle', optionalAuth, choresRouter.toggleChore);
 
+app.get('/api/tablet/chores/streaks', optionalAuth, choresRouter.getStreaks);
+
 app.get('/api/tablet/meals', optionalAuth, (req, res, next) => {
   req.tabletMode = true;
   next();
