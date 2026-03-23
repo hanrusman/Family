@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useApp } from '../context/AppContext';
 import { api } from '../utils/api';
+import { useMenus, useActiveMenu } from '../hooks/useMenu';
+import DayCard from '../components/weekmenu/DayCard';
 import './SettingsPage.css';
 
 const COLORS = ['#3B82F6', '#EF4444', '#22C55E', '#F59E0B', '#8B5CF6', '#EC4899', '#06B6D4', '#F97316'];
@@ -148,6 +150,63 @@ export default function SettingsPage() {
     setDemoLoading('');
   };
 
+  // Tab state
+  const [activeTab, setActiveTab] = useState('instellingen');
+
+  // Menu import state
+  const [adminPin, setAdminPin] = useState(localStorage.getItem('weekmenu_admin_pin') || '');
+  const [importJson, setImportJson] = useState('');
+  const [importMsg, setImportMsg] = useState('');
+  const { menus, refresh: refreshMenus } = useMenus();
+  const { refresh: refreshActiveMenu } = useActiveMenu();
+
+  const saveAdminPin = (pin) => {
+    setAdminPin(pin);
+    localStorage.setItem('weekmenu_admin_pin', pin);
+  };
+
+  const importMenu = async () => {
+    if (!importJson.trim() || !adminPin) return;
+    try {
+      const jsonData = JSON.parse(importJson);
+      const res = await fetch('/api/weekmenu/import', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('fk_token')}`,
+        },
+        body: JSON.stringify(jsonData),
+      });
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.error || 'Import mislukt');
+      }
+      setImportMsg('Menu geimporteerd!');
+      setImportJson('');
+      refreshMenus();
+      refreshActiveMenu();
+    } catch (err) {
+      setImportMsg(`Fout: ${err.message}`);
+    }
+  };
+
+  const deleteMenu = async (id) => {
+    if (!confirm('Menu verwijderen?')) return;
+    try {
+      await api.delete(`/weekmenu/${id}`);
+      refreshMenus();
+      refreshActiveMenu();
+    } catch (err) {
+      alert(err.message);
+    }
+  };
+
+  const TABS = [
+    { key: 'instellingen', label: '⚙️ Instellingen' },
+    { key: 'weekmenu', label: '🍽️ Menu Import' },
+    { key: 'recepten', label: '📖 Recepten' },
+  ];
+
   return (
     <div className="settings-page">
       <header className="settings-header">
@@ -155,7 +214,27 @@ export default function SettingsPage() {
         <button className="btn btn-secondary btn-sm" onClick={logout}>Uitloggen</button>
       </header>
 
+      {/* Tab bar */}
+      <div className="flex gap-1 px-4 py-2 border-b" style={{ borderColor: 'var(--border-color)', background: 'var(--bg-secondary)' }}>
+        {TABS.map((t) => (
+          <button
+            key={t.key}
+            className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${
+              activeTab === t.key
+                ? 'bg-[var(--accent)] text-white'
+                : 'text-[var(--text-secondary)] hover:bg-[var(--bg-hover)]'
+            }`}
+            onClick={() => setActiveTab(t.key)}
+          >
+            {t.label}
+          </button>
+        ))}
+      </div>
+
       <div className="settings-content">
+        {/* ============ INSTELLINGEN TAB ============ */}
+        {activeTab === 'instellingen' && (
+          <>
         {/* Gezinsleden */}
         <section className="settings-section">
           <h3>Gezinsleden</h3>
@@ -460,6 +539,81 @@ export default function SettingsPage() {
             </p>
           </div>
         </section>
+          </>
+        )}
+
+        {/* ============ WEEKMENU IMPORT TAB ============ */}
+        {activeTab === 'weekmenu' && (
+          <div className="flex flex-col gap-6 max-w-lg">
+            <section className="settings-section">
+              <h3>Menu importeren</h3>
+              <div className="form-group">
+                <label className="form-label">Admin PIN</label>
+                <input
+                  className="input"
+                  type="password"
+                  value={adminPin}
+                  onChange={(e) => saveAdminPin(e.target.value)}
+                  placeholder="PIN voor beheer"
+                />
+              </div>
+
+              <div className="form-group" style={{ marginTop: '0.75rem' }}>
+                <label className="form-label">Menu JSON</label>
+                <textarea
+                  className="textarea"
+                  rows={8}
+                  value={importJson}
+                  onChange={(e) => setImportJson(e.target.value)}
+                  placeholder='{"days": [...], "shopping_list": [...], "snack_suggestions": [...]}'
+                />
+                <button className="btn btn-primary btn-sm mt-2" onClick={importMenu}>
+                  Importeren
+                </button>
+                {importMsg && (
+                  <p className={`text-sm mt-1 ${importMsg.startsWith('Fout') ? 'text-[var(--danger)]' : 'text-[var(--success)]'}`}>
+                    {importMsg}
+                  </p>
+                )}
+              </div>
+            </section>
+
+            <section className="settings-section">
+              <h3>Menu geschiedenis</h3>
+              <div className="flex flex-col gap-2">
+                {menus.length === 0 && (
+                  <p className="text-sm text-[var(--text-muted)]">Nog geen menu's geimporteerd</p>
+                )}
+                {menus.map((m) => (
+                  <div
+                    key={m.id}
+                    className="flex items-center justify-between p-3 rounded-lg border bg-[var(--bg-card)]"
+                    style={{ borderColor: 'var(--border-color)' }}
+                  >
+                    <div>
+                      <span className="font-medium text-[var(--text-primary)]">Week {m.week_number}</span>
+                      <span className="text-sm text-[var(--text-muted)] ml-2">{m.year}</span>
+                      <span className={`ml-2 text-xs px-2 py-0.5 rounded-full ${
+                        m.status === 'active' ? 'bg-[var(--success-light)] text-[var(--success)]' : 'bg-[var(--bg-tertiary)] text-[var(--text-muted)]'
+                      }`}>
+                        {m.status}
+                      </span>
+                    </div>
+                    <button
+                      className="btn btn-ghost btn-sm text-[var(--danger)]"
+                      onClick={() => deleteMenu(m.id)}
+                    >
+                      ✕
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </section>
+          </div>
+        )}
+
+        {/* ============ RECEPTEN TAB ============ */}
+        {activeTab === 'recepten' && <RecipeLibrary />}
       </div>
     </div>
   );
@@ -497,6 +651,111 @@ function PinChanger() {
       </div>
       <button className="btn btn-primary btn-sm" onClick={changePin}>PIN wijzigen</button>
       {msg && <p className="text-sm" style={{ color: msg.includes('gewijzigd') ? 'var(--success)' : 'var(--danger)' }}>{msg}</p>}
+    </div>
+  );
+}
+
+function RecipeLibrary() {
+  const [recipes, setRecipes] = useState([]);
+  const [search, setSearch] = useState('');
+  const [loading, setLoading] = useState(true);
+  const [selected, setSelected] = useState(null);
+
+  useEffect(() => {
+    loadRecipes();
+  }, []);
+
+  const loadRecipes = async (query) => {
+    try {
+      setLoading(true);
+      const url = query ? `/recipes?search=${encodeURIComponent(query)}` : '/recipes';
+      const data = await api.get(url);
+      setRecipes(data);
+    } catch {
+      setRecipes([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSearch = (e) => {
+    e.preventDefault();
+    loadRecipes(search);
+  };
+
+  if (selected) {
+    const data = typeof selected.recipe_data === 'string'
+      ? JSON.parse(selected.recipe_data || '{}')
+      : (selected.recipe_data || {});
+
+    return (
+      <div className="max-w-2xl">
+        <button className="btn btn-ghost btn-sm mb-4" onClick={() => setSelected(null)}>
+          ← Terug
+        </button>
+        <h3 className="text-lg font-semibold text-[var(--text-primary)] mb-4">{selected.name}</h3>
+        {data.ingredients && (
+          <div className="mb-4">
+            <h4 className="font-medium text-[var(--text-primary)] mb-2">Ingrediënten</h4>
+            <ul className="text-sm text-[var(--text-secondary)]">
+              {data.ingredients.map((ing, i) => (
+                <li key={i}>{ing.amount} {ing.unit} {ing.name}</li>
+              ))}
+            </ul>
+          </div>
+        )}
+        {data.steps && (
+          <div>
+            <h4 className="font-medium text-[var(--text-primary)] mb-2">Bereiding</h4>
+            <ol className="text-sm text-[var(--text-secondary)] list-decimal pl-5 flex flex-col gap-2">
+              {data.steps.map((step, i) => <li key={i}>{step}</li>)}
+            </ol>
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  return (
+    <div className="max-w-2xl">
+      <form onSubmit={handleSearch} className="flex gap-2 mb-4">
+        <input
+          className="input flex-1"
+          placeholder="Zoek recept..."
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+        />
+        <button className="btn btn-primary btn-sm" type="submit">Zoek</button>
+      </form>
+
+      {loading && <p className="text-[var(--text-muted)] text-center">Laden...</p>}
+
+      {!loading && recipes.length === 0 && (
+        <p className="text-[var(--text-muted)] text-center py-8">Geen recepten gevonden</p>
+      )}
+
+      <div className="flex flex-col gap-2">
+        {recipes.map((r) => {
+          const tags = r.tags ? JSON.parse(r.tags || '[]') : [];
+          return (
+            <div
+              key={r.id}
+              className="p-3 rounded-lg border bg-[var(--bg-card)] cursor-pointer hover:border-[var(--accent)] transition-all"
+              style={{ borderColor: 'var(--border-color)' }}
+              onClick={() => setSelected(r)}
+            >
+              <div className="font-medium text-[var(--text-primary)]">{r.name}</div>
+              <div className="flex gap-2 mt-1">
+                {tags.map((tag, i) => (
+                  <span key={i} className="text-xs px-2 py-0.5 rounded-full bg-[var(--bg-tertiary)] text-[var(--text-muted)]">
+                    {tag}
+                  </span>
+                ))}
+              </div>
+            </div>
+          );
+        })}
+      </div>
     </div>
   );
 }

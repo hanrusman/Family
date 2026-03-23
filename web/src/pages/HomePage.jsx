@@ -50,7 +50,10 @@ export default function HomePage() {
       if (evts.status === 'fulfilled') setEvents(Array.isArray(evts.value) ? evts.value : []);
       if (mls.status === 'fulfilled') setMeals(Array.isArray(mls.value) ? mls.value : []);
       if (chs.status === 'fulfilled') setChores(Array.isArray(chs.value) ? chs.value : []);
-      if (shop.status === 'fulfilled') setShopping(Array.isArray(shop.value) ? shop.value : []);
+      if (shop.status === 'fulfilled') {
+        const shopData = shop.value;
+        setShopping(Array.isArray(shopData) ? shopData : (shopData?.items || []));
+      }
     } catch (err) {
       console.warn('HomePage fetch error:', err.message);
     }
@@ -131,8 +134,8 @@ export default function HomePage() {
                         {event.title || event.summary}
                       </p>
                       <p className="text-xs text-[var(--text-muted)]">
-                        {event.start && timeString(event.start)}
-                        {event.end && ` - ${timeString(event.end)}`}
+                        {(event.start_time || event.start) && timeString(event.start_time || event.start)}
+                        {(event.end_time || event.end) && ` - ${timeString(event.end_time || event.end)}`}
                         {event.location && ` · ${event.location}`}
                       </p>
                     </div>
