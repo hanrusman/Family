@@ -93,6 +93,16 @@ export default function ShoppingPage() {
     }
   };
 
+  const clearAll = async () => {
+    if (!confirm('Alle boodschappen wissen? De hele lijst wordt leeggemaakt.')) return;
+    try {
+      await api.delete('/shopping/all/clear');
+      fetchItems();
+    } catch (err) {
+      alert(err.message);
+    }
+  };
+
   const uncheckedCount = data.items.filter((i) => !i.checked).length;
   const checkedCount = data.items.filter((i) => i.checked).length;
 
@@ -110,14 +120,24 @@ export default function ShoppingPage() {
                 {uncheckedCount} {uncheckedCount === 1 ? 'item' : 'items'} op de lijst
               </p>
             </div>
-            {checkedCount > 0 && (
-              <button
-                className="bg-[var(--bg-card)] px-4 py-2 rounded-full text-sm font-semibold text-[var(--text-primary)] border border-[var(--border-color)] hover:bg-[var(--bg-hover)] transition-colors active:scale-95"
-                onClick={clearChecked}
-              >
-                Opruimen ({checkedCount})
-              </button>
-            )}
+            <div className="flex gap-2">
+              {uncheckedCount > 0 && (
+                <button
+                  className="bg-[var(--success)] px-4 py-2 rounded-full text-sm font-bold text-white hover:opacity-90 transition-all active:scale-95"
+                  onClick={clearAll}
+                >
+                  ✓ Boodschappen gedaan
+                </button>
+              )}
+              {checkedCount > 0 && (
+                <button
+                  className="bg-[var(--bg-card)] px-3 py-2 rounded-full text-xs font-semibold text-[var(--text-muted)] border border-[var(--border-color)] hover:bg-[var(--bg-hover)] transition-colors active:scale-95"
+                  onClick={clearChecked}
+                >
+                  Opruimen ({checkedCount})
+                </button>
+              )}
+            </div>
           </div>
         </div>
       </header>

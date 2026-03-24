@@ -134,6 +134,17 @@ router.delete('/checked/clear', (req, res) => {
   }
 });
 
+// DELETE /api/shopping/all/clear - Remove ALL shopping items (boodschappen gedaan)
+router.delete('/all/clear', (req, res) => {
+  try {
+    const db = getDb();
+    const result = db.prepare('DELETE FROM shopping_items').run();
+    res.json({ success: true, removed: result.changes });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
 // PATCH /api/shopping/:id/toggle
 function toggleItem(req, res) {
   try {
